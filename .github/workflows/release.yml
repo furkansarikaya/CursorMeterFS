@@ -8,14 +8,14 @@ on:
 jobs:
   release:
     name: Build & Release
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -switch /Applications/Xcode_15.4.app
+        run: sudo xcode-select -switch /Applications/Xcode_16.2.app
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -23,32 +23,32 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build Release
+      - name: Build Release (ad-hoc signed)
         run: |
           xcodebuild \
             -scheme CursorMeter \
             -configuration Release \
             -destination "platform=macOS" \
             -derivedDataPath build/DerivedData \
-            archive \
-            -archivePath build/CursorMeter.xcarchive
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
 
-      - name: Export .app
+      - name: Locate .app
+        id: app_path
         run: |
-          xcodebuild \
-            -exportArchive \
-            -archivePath build/CursorMeter.xcarchive \
-            -exportOptionsPlist scripts/ExportOptions.plist \
-            -exportPath build/export
+          APP=$(find build/DerivedData -name "CursorMeter.app" -maxdepth 6 | head -1)
+          echo "path=$APP" >> "$GITHUB_OUTPUT"
 
       - name: Create DMG
         run: |
           hdiutil create \
             -volname "CursorMeter" \
-            -srcfolder build/export/CursorMeter.app \
+            -srcfolder "${{ steps.app_path.outputs.path }}" \
             -ov \
             -format UDZO \
-            build/CursorMeter-${{ github.ref_name }}.dmg
+            "build/CursorMeter-${{ github.ref_name }}.dmg"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -62,8 +62,9 @@ jobs:
 
             ### Installation
             1. Download `CursorMeter-${{ github.ref_name }}.dmg`
-            2. Open the DMG and drag CursorMeter to Applications
-            3. Launch CursorMeter — it detects your Cursor login automatically
+            2. Open the DMG → drag CursorMeter to Applications
+            3. On first launch: **System Settings → Privacy & Security → Open Anyway**
+            4. Launch CursorMeter — it detects your Cursor login automatically
 
             ### Requirements
             - macOS 13.0+
