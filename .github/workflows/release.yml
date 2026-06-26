@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build Release
+        run: |
+          xcodebuild \
+            -scheme CursorMeter \
+            -configuration Release \
+            -destination "platform=macOS" \
+            -derivedDataPath build/DerivedData \
+            archive \
+            -archivePath build/CursorMeter.xcarchive
+
+      - name: Export .app
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath build/CursorMeter.xcarchive \
+            -exportOptionsPlist scripts/ExportOptions.plist \
+            -exportPath build/export
+
+      - name: Create DMG
+        run: |
+          hdiutil create \
+            -volname "CursorMeter" \
+            -srcfolder build/export/CursorMeter.app \
+            -ov \
+            -format UDZO \
+            build/CursorMeter-${{ github.ref_name }}.dmg
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/CursorMeter-${{ github.ref_name }}.dmg
+          generate_release_notes: true
+          body: |
+            ## CursorMeter ${{ github.ref_name }}
+
+            macOS menu bar app to monitor your Cursor AI subscription usage.
+
+            ### Installation
+            1. Download `CursorMeter-${{ github.ref_name }}.dmg`
+            2. Open the DMG and drag CursorMeter to Applications
+            3. Launch CursorMeter — it detects your Cursor login automatically
+
+            ### Requirements
+            - macOS 13.0+
+            - Cursor installed and signed in
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

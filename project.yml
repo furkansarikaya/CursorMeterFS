@@ -1,0 +1,104 @@
+name: CursorMeter
+options:
+  bundleIdPrefix: com.furkansarikaya
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  CursorMeter:
+    type: application
+    platform: macOS
+    sources:
+      - path: CursorMeter
+        excludes:
+          - "**/*.md"
+    resources:
+      - CursorMeter/Resources/Assets.xcassets
+      - CursorMeter/Resources/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.furkansarikaya.CursorMeter
+        PRODUCT_NAME: CursorMeter
+        INFOPLIST_FILE: CursorMeter/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CursorMeter/Resources/CursorMeter.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 1.0.0
+        # Link against SQLite (system framework — no extra dependency)
+        OTHER_LDFLAGS: "-lsqlite3"
+        # Security: disable unnecessary capabilities
+        ENABLE_APP_SANDBOX: NO  # Needed to read ~/Library/Application Support/Cursor/...
+        COMBINE_HIDPI_IMAGES: YES
+      configs:
+        Debug:
+          # Ad-hoc signing for Debug — no provisioning profile needed, Xcode Previews work
+          CODE_SIGN_IDENTITY: "-"
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_ENTITLEMENTS: ""
+          ENABLE_HARDENED_RUNTIME: NO
+          CODE_SIGNING_REQUIRED: NO
+    dependencies:
+      - sdk: Cocoa.framework
+      - sdk: Security.framework
+      - sdk: ServiceManagement.framework
+      - sdk: UserNotifications.framework
+
+  CursorMeterTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - CursorMeterTests
+    dependencies:
+      - target: CursorMeter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.furkansarikaya.CursorMeterTests
+        INFOPLIST_FILE: ""
+        GENERATE_INFOPLIST_FILE: YES
+        # Run as standalone unit-test bundle (no host app launch needed)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/CursorMeter.app/Contents/MacOS/CursorMeter
+        BUNDLE_LOADER: $(TEST_HOST)
+
+schemes:
+  CursorMeter:
+    build:
+      targets:
+        CursorMeter: all
+        CursorMeterTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - name: CursorMeterTests
+          randomExecutionOrder: true
+          parallelizable: true
+    archive:
+      config: Release
+
+configs:
+  Debug:
+    settings:
+      DEBUG_INFORMATION_FORMAT: dwarf
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      # Ad-hoc signing for Debug: no provisioning profile needed, Previews work
+      CODE_SIGN_IDENTITY: "-"
+      CODE_SIGN_STYLE: Manual
+      CODE_SIGN_ENTITLEMENTS: ""
+      ENABLE_HARDENED_RUNTIME: NO
+  Release:
+    settings:
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+      DEAD_CODE_STRIPPING: YES

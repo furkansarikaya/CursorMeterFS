@@ -1,0 +1,60 @@
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+!*.xcodeproj/project.pbxproj
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+dump.syms
+
+# Build
+build/
+Build/
+*.o
+*.a
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Secrets & Credentials — NEVER commit these
+*.pem
+*.key
+*.p12
+*.p8
+.env
+.env.*
+Secrets.swift
+
+# Usage export (may contain aggregate data)
+.cursormeter/
+
+# XcodeGen
+# project.yml is committed; generated .xcodeproj is gitignored above
+
+# SPM
+.build/
+.swiftpm/
+
+# CocoaPods (not used)
+Podfile.lock
+Pods/
+
+# Test results
+TestResults/
+*.xcresult
+
+# Logs
+*.log
+
+# Local personal notes
+*.local.md

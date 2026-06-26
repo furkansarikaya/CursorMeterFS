@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Bundle identity — required by UserNotifications and other system frameworks -->
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <!-- Menu bar only app — hides from Dock and App Switcher -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- Prevent macOS from terminating the app when all windows close -->
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+
+    <!-- Privacy usage descriptions -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>CursorMeter reads the Cursor authentication token from local storage to display your usage data. No credentials are transmitted outside your device beyond the official cursor.com API.</string>
+
+    <!-- App Transport Security: allow only cursor.com -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>cursor.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+</dict>
+</plist>
