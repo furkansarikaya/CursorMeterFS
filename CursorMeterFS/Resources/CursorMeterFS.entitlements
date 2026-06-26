@@ -5,7 +5,7 @@
     <!-- Keychain access for storing the derived session token securely -->
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)com.furkansarikaya.CursorMeter</string>
+        <string>$(AppIdentifierPrefix)com.furkansarikaya.CursorMeterFS</string>
     </array>
 
     <!-- Network access: HTTPS calls to cursor.com only -->

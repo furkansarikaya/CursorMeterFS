@@ -84,7 +84,6 @@ final class UsageStore: ObservableObject {
     }
 
     func signOut() {
-        KeychainService.deleteAll()
         currentSessionToken = nil
         currentUserId = nil
         accountEmail = ""
@@ -189,7 +188,6 @@ final class UsageStore: ObservableObject {
             return true
 
         } catch CursorAPIClient.APIError.tokenInvalid {
-            try? KeychainService.delete(key: .sessionToken)
             currentSessionToken = nil
             appState = .error("Session expired. Refreshing credentials...")
             Task {
@@ -204,29 +202,15 @@ final class UsageStore: ObservableObject {
         }
     }
 
-    // MARK: - Credential resolution (Keychain → SQLite)
+    // MARK: - Credential resolution (always reads from Cursor's SQLite)
 
     private func resolveCredentials() async -> (token: String?, userId: String?, plan: Plan, email: String?) {
-        // Fast path: Keychain has cached token AND email (email key is newer — fall through to
-        // slow path if it was never written so SQLite populates and caches it this run).
-        if let cachedToken = KeychainService.loadOptional(key: .sessionToken),
-           let cachedUserId = KeychainService.loadOptional(key: .userId),
-           let cachedEmail = KeychainService.loadOptional(key: .email),
-           !cachedToken.isEmpty, !cachedUserId.isEmpty {
-            let plan = Plan.from(rawValue: KeychainService.loadOptional(key: .detectedPlan))
-            return (cachedToken, cachedUserId, plan, cachedEmail)
-        }
-
-        // Slow path: read from Cursor's SQLite (background thread)
+        // Always read from Cursor's local SQLite — fast (~1 ms) and avoids Keychain prompts.
+        // The token is already in Cursor's readable database, so Keychain caching adds no
+        // meaningful security benefit and causes per-binary ACL prompts in development.
         return await Task.detached(priority: .userInitiated) {
             do {
                 let creds = try CursorTokenReader.readCredentials()
-                // Cache in Keychain for future fast-path
-                try? KeychainService.save(creds.sessionToken, for: .sessionToken)
-                try? KeychainService.save(creds.userId, for: .userId)
-                try? KeychainService.save(creds.plan.rawValue, for: .detectedPlan)
-                if let email = creds.email { try? KeychainService.save(email, for: .email) }
-                if let refresh = creds.refreshToken { try? KeychainService.save(refresh, for: .refreshToken) }
                 return (creds.sessionToken, creds.userId, creds.plan, creds.email)
             } catch {
                 print("[CursorMeterFS] Token read failed: \(error.localizedDescription)")

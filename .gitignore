@@ -36,7 +36,10 @@ Build/
 Secrets.swift
 
 # Usage export (may contain aggregate data)
-.cursormeter/
+.cursormeterfs/
+
+# Security scan reports — local only, not for version control
+security-report/
 
 # XcodeGen
 # project.yml is committed; generated .xcodeproj is gitignored above

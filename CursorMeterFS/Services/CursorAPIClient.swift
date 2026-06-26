@@ -57,9 +57,9 @@ actor CursorAPIClient {
     /// Fetches monthly request quota and usage.
     /// Returns `(used, total/maxRequestUsage, startOfMonth)`.
     func fetchUsage(userId: String, sessionToken: String) async throws -> UsageAPIResponse {
-        guard let url = URL(string: "\(baseURL)/api/usage?user=\(userId)") else {
-            throw APIError.invalidHost(baseURL)
-        }
+        var components = URLComponents(string: "\(baseURL)/api/usage")!
+        components.queryItems = [URLQueryItem(name: "user", value: userId)]
+        guard let url = components.url else { throw APIError.invalidHost(baseURL) }
         try validateHost(url)
 
         var req = URLRequest(url: url, timeoutInterval: timeout)
@@ -176,9 +176,11 @@ actor CursorAPIClient {
         )
     }
 
-    /// Validates that the URL's host is exactly `cursor.com`.
+    /// Validates that the URL's host is exactly `cursor.com` or a direct subdomain.
+    /// Uses strict equality + dot-prefix check to prevent `evilcursor.com` bypass.
     private func validateHost(_ url: URL) throws {
-        guard let host = url.host, host.hasSuffix(allowedHost) else {
+        guard let host = url.host,
+              host == allowedHost || host.hasSuffix(".\(allowedHost)") else {
             throw APIError.invalidHost(url.host ?? "nil")
         }
     }

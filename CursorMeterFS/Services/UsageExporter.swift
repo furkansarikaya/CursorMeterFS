@@ -9,7 +9,7 @@ final class UsageExporter {
 
     private var exportURL: URL? {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let dir  = home.appendingPathComponent(".cursormeter")
+        let dir  = home.appendingPathComponent(".cursormeterfs")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("usage.json")
     }

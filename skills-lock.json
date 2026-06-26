@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "security-check": {
+      "source": "ersinkoc/security-check",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "27cca40011baf35fb1182570458ec541799ae7941ecb2fd2da05b4113b83f0dd"
+    }
+  }
+}

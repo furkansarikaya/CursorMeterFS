@@ -36,21 +36,30 @@ actor TeamResolver {
     // MARK: - Private
 
     private func fetchTeamId(sessionToken: String) async -> Int? {
-        guard let url = URL(string: "https://cursor.com/api/auth/full_stripe_profile") else {
-            return nil
-        }
+        // URL is hardcoded — no user input involved, but still validate host defensively
+        guard let url = URL(string: "https://cursor.com/api/auth/full_stripe_profile"),
+              url.host == "cursor.com" else { return nil }
+
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest  = 10
+        config.timeoutIntervalForResource = 15
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        let session = URLSession(configuration: config)
 
         var req = URLRequest(url: url, timeoutInterval: 10)
         req.httpMethod = "GET"
         req.setValue("WorkosCursorSessionToken=\(sessionToken)", forHTTPHeaderField: "Cookie")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue("https://cursor.com", forHTTPHeaderField: "Origin")
+        req.setValue("https://cursor.com/settings", forHTTPHeaderField: "Referer")
 
         struct StripeProfile: Decodable {
             let teamId: Int?
             let membershipType: String?
         }
 
-        guard let (data, _) = try? await URLSession.shared.data(for: req),
+        guard let (data, response) = try? await session.data(for: req),
+              (response as? HTTPURLResponse)?.statusCode == 200,
               let profile = try? JSONDecoder().decode(StripeProfile.self, from: data) else {
             return nil
         }

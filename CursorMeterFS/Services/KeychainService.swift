@@ -44,10 +44,14 @@ enum KeychainService {
         guard let data = value.data(using: .utf8) else { throw KeychainError.encodingFailed }
 
         // Delete any existing entry first to avoid `errSecDuplicateItem`
+        // kSecUseDataProtectionKeychain: uses the modern iOS-style data protection keychain.
+        // Access is controlled by bundle ID (not binary hash), so no Keychain prompt
+        // appears when the app is rebuilt during development.
         let deleteQuery: [CFString: Any] = [
-            kSecClass:           kSecClassGenericPassword,
-            kSecAttrService:     key.rawValue as CFString,
-            kSecAttrAccount:     Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
+            kSecClass:                      kSecClassGenericPassword,
+            kSecAttrService:                key.rawValue as CFString,
+            kSecAttrAccount:                Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
+            kSecUseDataProtectionKeychain:  kCFBooleanTrue!,
         ]
         SecItemDelete(deleteQuery as CFDictionary)
 
@@ -57,7 +61,8 @@ enum KeychainService {
             kSecAttrAccount:                Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
             kSecValueData:                  data,
             kSecAttrAccessible:             kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            kSecAttrSynchronizable:         kCFBooleanFalse!,  // never iCloud sync
+            kSecAttrSynchronizable:         kCFBooleanFalse!,
+            kSecUseDataProtectionKeychain:  kCFBooleanTrue!,
         ]
 
         let status = SecItemAdd(addQuery as CFDictionary, nil)
@@ -69,12 +74,13 @@ enum KeychainService {
     /// Loads a string value from the Keychain. Throws `.notFound` if the key doesn't exist.
     static func load(key: Key) throws -> String {
         let query: [CFString: Any] = [
-            kSecClass:               kSecClassGenericPassword,
-            kSecAttrService:         key.rawValue as CFString,
-            kSecAttrAccount:         Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
-            kSecReturnData:          kCFBooleanTrue!,
-            kSecMatchLimit:          kSecMatchLimitOne,
-            kSecAttrSynchronizable:  kCFBooleanFalse!,
+            kSecClass:                      kSecClassGenericPassword,
+            kSecAttrService:                key.rawValue as CFString,
+            kSecAttrAccount:                Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
+            kSecReturnData:                 kCFBooleanTrue!,
+            kSecMatchLimit:                 kSecMatchLimitOne,
+            kSecAttrSynchronizable:         kCFBooleanFalse!,
+            kSecUseDataProtectionKeychain:  kCFBooleanTrue!,
         ]
 
         var result: AnyObject?
@@ -104,9 +110,10 @@ enum KeychainService {
     /// Removes a key from the Keychain. Silently succeeds if the key was not present.
     static func delete(key: Key) throws {
         let query: [CFString: Any] = [
-            kSecClass:       kSecClassGenericPassword,
-            kSecAttrService: key.rawValue as CFString,
-            kSecAttrAccount: Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
+            kSecClass:                      kSecClassGenericPassword,
+            kSecAttrService:                key.rawValue as CFString,
+            kSecAttrAccount:                Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
+            kSecUseDataProtectionKeychain:  kCFBooleanTrue!,
         ]
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {

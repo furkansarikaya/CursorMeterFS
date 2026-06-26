@@ -71,7 +71,7 @@ struct OnboardingView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Button("View instructions in README") {
-                    NSWorkspace.shared.open(URL(string: "https://github.com/furkansarikaya/CursorMeterFS#manual-session")!)
+                    if let u = URL(string: "https://github.com/furkansarikaya/CursorMeterFS#manual-session") { NSWorkspace.shared.open(u) }
                 }
                 .font(.caption)
                 .buttonStyle(.plain)
