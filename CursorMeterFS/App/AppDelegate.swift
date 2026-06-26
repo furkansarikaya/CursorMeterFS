@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - App lifecycle
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        guard ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" else { return }
         // Single-instance enforcement: if another copy is already running, activate it and quit.
         let bundleID = Bundle.main.bundleIdentifier ?? "com.furkansarikaya.CursorMeterFS"
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
@@ -26,8 +27,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Skip UI setup when running under XCTest to avoid NSStatusBar crash
-        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+        // Skip UI setup when running under XCTest or Xcode Preview
+        let env = ProcessInfo.processInfo.environment
+        guard env["XCTestConfigurationFilePath"] == nil,
+              env["XCODE_RUNNING_FOR_PREVIEWS"] != "1" else { return }
 
         NSApp.setActivationPolicy(.accessory)
 
