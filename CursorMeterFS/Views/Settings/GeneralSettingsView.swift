@@ -96,7 +96,7 @@ struct GeneralSettingsView: View {
 
             // ── Export ───────────────────────────────────────────────
             Section {
-                Toggle("Export usage to ~/.cursormeter/usage.json", isOn: $store.exportEnabled)
+                Toggle("Export usage to ~/.cursormeterfs/usage.json", isOn: $store.exportEnabled)
                     .help("Exports only aggregate percentages and counts — no credentials are written.")
             }
 

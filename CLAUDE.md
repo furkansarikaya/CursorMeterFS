@@ -1,4 +1,4 @@
-# CursorMeter — CLAUDE.md
+# CursorMeterFS — CLAUDE.md
 
 macOS menu bar uygulaması: Cursor AI abonelik kotasını gerçek zamanlı izler.
 ClaudeMeter (eddmann/ClaudeMeter) tasarımından ilham alır, veri kaynağı Cursor'dır.

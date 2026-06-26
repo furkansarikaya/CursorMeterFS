@@ -27,7 +27,7 @@ jobs:
       - name: Build
         run: |
           xcodebuild \
-            -scheme CursorMeter \
+            -scheme CursorMeterFS \
             -configuration Debug \
             -destination "platform=macOS" \
             build \
@@ -36,7 +36,7 @@ jobs:
       - name: Test
         run: |
           xcodebuild \
-            -scheme CursorMeter \
+            -scheme CursorMeterFS \
             -configuration Debug \
             -destination "platform=macOS" \
             test \

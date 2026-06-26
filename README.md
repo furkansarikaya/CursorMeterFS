@@ -1,7 +1,7 @@
-# CursorMeter
+# CursorMeterFS
 
 <p align="center">
-  <img src="docs/screenshots/icon.png" width="128" alt="CursorMeter">
+  <img src="docs/screenshots/icon.png" width="128" alt="CursorMeterFS">
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@ Instead of opening Cursor's web dashboard, a single glance at your menu bar tell
 ## Features
 
 ### Zero-Setup Auth
-If Cursor is already installed and you're signed in — nothing else is needed. CursorMeter reads Cursor's local database **read-only** and picks up your identity automatically. No copying session IDs, no pasting tokens.
+If Cursor is already installed and you're signed in — nothing else is needed. CursorMeterFS reads Cursor's local database **read-only** and picks up your identity automatically. No copying session IDs, no pasting tokens.
 
 ### Dynamic Quota Tracking
 Your monthly request limit is fetched from the API in real time. If your plan changes (Free → Pro, Pro → Ultra) the limit updates automatically — nothing is hardcoded.
@@ -248,7 +248,7 @@ Open via right-click → **Settings**, or the gear icon at the bottom of the pop
 
 ## How It Works
 
-CursorMeter reads Cursor's local SQLite database **read-only**:
+CursorMeterFS reads Cursor's local SQLite database **read-only**:
 
 ```
 ~/Library/Application Support/Cursor/User/globalStorage/state.vscdb

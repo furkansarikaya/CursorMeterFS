@@ -1,5 +1,5 @@
 import XCTest
-@testable import CursorMeter
+@testable import CursorMeterFS
 
 final class UsageStatusTests: XCTestCase {
 

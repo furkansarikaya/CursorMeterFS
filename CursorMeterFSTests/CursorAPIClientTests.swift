@@ -1,5 +1,5 @@
 import XCTest
-@testable import CursorMeter
+@testable import CursorMeterFS
 
 /// Tests the API response parsing layer with mock JSON payloads.
 /// No real network calls are made.

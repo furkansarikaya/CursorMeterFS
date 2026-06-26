@@ -28,7 +28,7 @@ jobs:
       - name: Build Release (ad-hoc signed)
         run: |
           xcodebuild \
-            -scheme CursorMeter \
+            -scheme CursorMeterFS \
             -configuration Release \
             -destination "platform=macOS" \
             -derivedDataPath build/DerivedData \
@@ -40,33 +40,33 @@ jobs:
       - name: Locate .app
         id: app_path
         run: |
-          APP=$(find build/DerivedData -name "CursorMeter.app" -maxdepth 6 | head -1)
+          APP=$(find build/DerivedData -name "CursorMeterFS.app" -maxdepth 6 | head -1)
           echo "path=$APP" >> "$GITHUB_OUTPUT"
 
       - name: Create DMG
         run: |
           hdiutil create \
-            -volname "CursorMeter" \
+            -volname "CursorMeterFS" \
             -srcfolder "${{ steps.app_path.outputs.path }}" \
             -ov \
             -format UDZO \
-            "build/CursorMeter-${{ github.ref_name }}.dmg"
+            "build/CursorMeterFS-${{ github.ref_name }}.dmg"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/CursorMeter-${{ github.ref_name }}.dmg
+          files: build/CursorMeterFS-${{ github.ref_name }}.dmg
           generate_release_notes: true
           body: |
-            ## CursorMeter ${{ github.ref_name }}
+            ## CursorMeterFS ${{ github.ref_name }}
 
             macOS menu bar app to monitor your Cursor AI subscription usage.
 
             ### Installation
-            1. Download `CursorMeter-${{ github.ref_name }}.dmg`
-            2. Open the DMG → drag CursorMeter to Applications
+            1. Download `CursorMeterFS-${{ github.ref_name }}.dmg`
+            2. Open the DMG → drag CursorMeterFS to Applications
             3. On first launch: **System Settings → Privacy & Security → Open Anyway**
-            4. Launch CursorMeter — it detects your Cursor login automatically
+            4. Launch CursorMeterFS — it detects your Cursor login automatically
 
             ### Requirements
             - macOS 13.0+

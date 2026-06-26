@@ -14,7 +14,7 @@ struct AboutView: View {
                 .cornerRadius(14)
 
             VStack(spacing: 4) {
-                Text("CursorMeter")
+                Text("CursorMeterFS")
                     .font(.title2.weight(.bold))
                 Text("Version \(version) (\(build))")
                     .font(.caption)

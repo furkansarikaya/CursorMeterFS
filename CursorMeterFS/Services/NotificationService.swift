@@ -82,7 +82,7 @@ final class NotificationService: NSObject {
     func sendTestNotification() {
         send(
             identifier: "test-\(Date().timeIntervalSince1970)",
-            title: "CursorMeter",
+            title: "CursorMeterFS",
             body: "Notifications are working correctly!",
             categoryIdentifier: "TEST"
         )

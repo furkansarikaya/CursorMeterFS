@@ -1,4 +1,4 @@
-name: CursorMeter
+name: CursorMeterFS
 options:
   bundleIdPrefix: com.furkansarikaya
   deploymentTarget:
@@ -15,22 +15,22 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: NO
 
 targets:
-  CursorMeter:
+  CursorMeterFS:
     type: application
     platform: macOS
     sources:
-      - path: CursorMeter
+      - path: CursorMeterFS
         excludes:
           - "**/*.md"
     resources:
-      - CursorMeter/Resources/Assets.xcassets
-      - CursorMeter/Resources/Info.plist
+      - CursorMeterFS/Resources/Assets.xcassets
+      - CursorMeterFS/Resources/Info.plist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.furkansarikaya.CursorMeter
-        PRODUCT_NAME: CursorMeter
-        INFOPLIST_FILE: CursorMeter/Resources/Info.plist
-        CODE_SIGN_ENTITLEMENTS: CursorMeter/Resources/CursorMeter.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.furkansarikaya.CursorMeterFS
+        PRODUCT_NAME: CursorMeterFS
+        INFOPLIST_FILE: CursorMeterFS/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CursorMeterFS/Resources/CursorMeterFS.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: 1.0.0
@@ -53,34 +53,33 @@ targets:
       - sdk: ServiceManagement.framework
       - sdk: UserNotifications.framework
 
-  CursorMeterTests:
+  CursorMeterFSTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - CursorMeterTests
+      - CursorMeterFSTests
     dependencies:
-      - target: CursorMeter
+      - target: CursorMeterFS
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.furkansarikaya.CursorMeterTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.furkansarikaya.CursorMeterFSTests
         INFOPLIST_FILE: ""
         GENERATE_INFOPLIST_FILE: YES
-        # Run as standalone unit-test bundle (no host app launch needed)
-        TEST_HOST: $(BUILT_PRODUCTS_DIR)/CursorMeter.app/Contents/MacOS/CursorMeter
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/CursorMeterFS.app/Contents/MacOS/CursorMeterFS
         BUNDLE_LOADER: $(TEST_HOST)
 
 schemes:
-  CursorMeter:
+  CursorMeterFS:
     build:
       targets:
-        CursorMeter: all
-        CursorMeterTests: [test]
+        CursorMeterFS: all
+        CursorMeterFSTests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - name: CursorMeterTests
+        - name: CursorMeterFSTests
           randomExecutionOrder: true
           parallelizable: true
     archive:
@@ -92,7 +91,6 @@ configs:
       DEBUG_INFORMATION_FORMAT: dwarf
       SWIFT_OPTIMIZATION_LEVEL: "-Onone"
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
-      # Ad-hoc signing for Debug: no provisioning profile needed, Previews work
       CODE_SIGN_IDENTITY: "-"
       CODE_SIGN_STYLE: Manual
       CODE_SIGN_ENTITLEMENTS: ""

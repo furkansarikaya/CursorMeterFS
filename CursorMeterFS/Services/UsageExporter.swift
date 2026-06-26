@@ -1,6 +1,6 @@
 import Foundation
 
-/// Optionally exports aggregated usage data to `~/.cursormeter/usage.json`.
+/// Optionally exports aggregated usage data to `~/.cursormeterfs/usage.json`.
 /// SECURITY: This file contains ONLY percentages and counts — no tokens, no email.
 final class UsageExporter {
 

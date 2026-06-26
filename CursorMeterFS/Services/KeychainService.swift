@@ -12,11 +12,11 @@ enum KeychainService {
 
     // MARK: - Keys
     enum Key: String {
-        case sessionToken    = "com.furkansarikaya.CursorMeter.sessionToken"
-        case userId          = "com.furkansarikaya.CursorMeter.userId"
-        case detectedPlan    = "com.furkansarikaya.CursorMeter.detectedPlan"
-        case refreshToken    = "com.furkansarikaya.CursorMeter.refreshToken"
-        case email           = "com.furkansarikaya.CursorMeter.email"
+        case sessionToken    = "com.furkansarikaya.CursorMeterFS.sessionToken"
+        case userId          = "com.furkansarikaya.CursorMeterFS.userId"
+        case detectedPlan    = "com.furkansarikaya.CursorMeterFS.detectedPlan"
+        case refreshToken    = "com.furkansarikaya.CursorMeterFS.refreshToken"
+        case email           = "com.furkansarikaya.CursorMeterFS.email"
     }
 
     enum KeychainError: Error, LocalizedError {
@@ -47,14 +47,14 @@ enum KeychainService {
         let deleteQuery: [CFString: Any] = [
             kSecClass:           kSecClassGenericPassword,
             kSecAttrService:     key.rawValue as CFString,
-            kSecAttrAccount:     Bundle.main.bundleIdentifier ?? "CursorMeter" as CFString,
+            kSecAttrAccount:     Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
         ]
         SecItemDelete(deleteQuery as CFDictionary)
 
         let addQuery: [CFString: Any] = [
             kSecClass:                      kSecClassGenericPassword,
             kSecAttrService:                key.rawValue as CFString,
-            kSecAttrAccount:                Bundle.main.bundleIdentifier ?? "CursorMeter" as CFString,
+            kSecAttrAccount:                Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
             kSecValueData:                  data,
             kSecAttrAccessible:             kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             kSecAttrSynchronizable:         kCFBooleanFalse!,  // never iCloud sync
@@ -71,7 +71,7 @@ enum KeychainService {
         let query: [CFString: Any] = [
             kSecClass:               kSecClassGenericPassword,
             kSecAttrService:         key.rawValue as CFString,
-            kSecAttrAccount:         Bundle.main.bundleIdentifier ?? "CursorMeter" as CFString,
+            kSecAttrAccount:         Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
             kSecReturnData:          kCFBooleanTrue!,
             kSecMatchLimit:          kSecMatchLimitOne,
             kSecAttrSynchronizable:  kCFBooleanFalse!,
@@ -106,7 +106,7 @@ enum KeychainService {
         let query: [CFString: Any] = [
             kSecClass:       kSecClassGenericPassword,
             kSecAttrService: key.rawValue as CFString,
-            kSecAttrAccount: Bundle.main.bundleIdentifier ?? "CursorMeter" as CFString,
+            kSecAttrAccount: Bundle.main.bundleIdentifier ?? "CursorMeterFS" as CFString,
         ]
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
