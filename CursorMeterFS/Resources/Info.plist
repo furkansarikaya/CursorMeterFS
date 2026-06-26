@@ -28,7 +28,7 @@
 
     <!-- Privacy usage descriptions -->
     <key>NSAppleEventsUsageDescription</key>
-    <string>CursorMeter reads the Cursor authentication token from local storage to display your usage data. No credentials are transmitted outside your device beyond the official cursor.com API.</string>
+    <string>CursorMeterFS reads the Cursor authentication token from local storage to display your usage data. No credentials are transmitted outside your device beyond the official cursor.com API.</string>
 
     <!-- App Transport Security: allow only cursor.com -->
     <key>NSAppTransportSecurity</key>

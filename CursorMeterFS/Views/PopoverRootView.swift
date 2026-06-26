@@ -199,5 +199,5 @@ private struct OnDemandCardView: View {
 
 // MARK: - Notification name
 extension Notification.Name {
-    static let openSettings = Notification.Name("CursorMeterOpenSettings")
+    static let openSettings = Notification.Name("CursorMeterFSOpenSettings")
 }

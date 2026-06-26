@@ -18,7 +18,7 @@ struct OnboardingView: View {
 
             // Title
             VStack(spacing: 4) {
-                Text("Welcome to CursorMeter")
+                Text("Welcome to CursorMeterFS")
                     .font(.headline)
                 Text("Monitor your Cursor plan usage in real-time")
                     .font(.caption)
@@ -37,7 +37,7 @@ struct OnboardingView: View {
                 )
                 instructionRow(
                     step: "2",
-                    text: "Click Retry below — CursorMeter will detect your login automatically",
+                    text: "Click Retry below — CursorMeterFS will detect your login automatically",
                     icon: "arrow.clockwise.circle"
                 )
                 instructionRow(

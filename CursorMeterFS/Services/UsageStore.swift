@@ -189,11 +189,9 @@ final class UsageStore: ObservableObject {
             return true
 
         } catch CursorAPIClient.APIError.tokenInvalid {
-            // Token expired — clear Keychain and re-read from SQLite on next refresh
             try? KeychainService.delete(key: .sessionToken)
             currentSessionToken = nil
             appState = .error("Session expired. Refreshing credentials...")
-            // Immediately try again with fresh credentials from SQLite
             Task {
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 await refresh()
@@ -201,7 +199,6 @@ final class UsageStore: ObservableObject {
             return false
 
         } catch {
-            // Show last known data, show error badge
             appState = .error(error.localizedDescription)
             return false
         }
@@ -232,6 +229,7 @@ final class UsageStore: ObservableObject {
                 if let refresh = creds.refreshToken { try? KeychainService.save(refresh, for: .refreshToken) }
                 return (creds.sessionToken, creds.userId, creds.plan, creds.email)
             } catch {
+                print("[CursorMeterFS] Token read failed: \(error.localizedDescription)")
                 return (nil, nil, .free, nil)
             }
         }.value

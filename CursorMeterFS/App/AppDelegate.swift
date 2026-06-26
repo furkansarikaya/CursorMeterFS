@@ -16,7 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Single-instance enforcement: if another copy is already running, activate it and quit.
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.furkansarikaya.CursorMeter"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.furkansarikaya.CursorMeterFS"
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
             .filter { $0 != NSRunningApplication.current }
         if !others.isEmpty {
@@ -131,7 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit CursorMeter", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit CursorMeterFS", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil  // must clear so left-click works next time
@@ -147,7 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let host   = NSHostingController(rootView: SettingsView().environmentObject(store))
         let window = NSWindow(contentViewController: host)
-        window.title = "CursorMeter Settings"
+        window.title = "CursorMeterFS Settings"
         window.styleMask = [.titled, .closable]
         window.center()
         window.setFrameAutosaveName("SettingsWindow")

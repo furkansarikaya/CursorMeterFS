@@ -46,7 +46,7 @@ Pro'da 1000, Ultra'da farklı, yarın değişebilir — her zaman API değerini 
 ✅ Token        → sadece macOS Keychain, kSecAttrAccessibleWhenUnlockedThisDeviceOnly
 ✅ Ağ           → yalnızca https://cursor.com (host doğrulanır, AppTransportSecurity kısıtlı)
 ✅ Log          → token/email asla yazdırılmaz; debug'da sadece uzunluk gösterilir
-✅ Export       → ~/.cursormeter/usage.json içinde secret YOK (sadece yüzde/sayı)
+✅ Export       → ~/.cursormeterfs/usage.json içinde secret YOK (sadece yüzde/sayı)
 ✅ XSS          → WebView yok; tüm string'ler SwiftUI Text ile (otomatik escape)
 ✅ Credential   → kod içinde hardcoded credential yasak; .env / Keychain kullan
 ```
@@ -74,7 +74,7 @@ SQLite                  ← libsqlite3 (sistem, ekstra bağımlılık yok)
 5. CursorAPIClient.fetchHardLimit()    → spending limit
 6. UsageStore state güncel → NSStatusItem ikonu + popover yeniden çizilir
 7. Eşik aşıldıysa NotificationService bildirim gönderir
-8. exportEnabled ise UsageExporter ~/.cursormeter/usage.json yazar (secret'sız)
+8. exportEnabled ise UsageExporter ~/.cursormeterfs/usage.json yazar (secret'sız)
 ```
 
 ### Token Yenileme
@@ -88,9 +88,9 @@ SQLite                  ← libsqlite3 (sistem, ekstra bağımlılık yok)
 ## Klasör Yapısı
 
 ```
-CursorMeter/
+CursorMeterFS/
   App/
-    CursorMeterApp.swift      @main, LSUIElement=YES ile dock'tan gizli
+    CursorMeterFSApp.swift      @main, LSUIElement=YES ile dock'tan gizli
     AppDelegate.swift         NSStatusItem, NSPopover, Settings window, Combine
   Models/
     Plan.swift                .free/.pro/.proPlus/.ultra/.business  +  from(rawValue:)
@@ -106,7 +106,7 @@ CursorMeter/
     UsageStore.swift          @MainActor ObservableObject; state machine; refresh timer
     NotificationService.swift UNUserNotificationCenter; threshold takibi; spam önleme
     LoginItemService.swift    SMAppService.mainApp (macOS 13+)
-    UsageExporter.swift       ~/.cursormeter/usage.json (sadece agregat veriler)
+    UsageExporter.swift       ~/.cursormeterfs/usage.json (sadece agregat veriler)
   Views/
     PopoverRootView.swift     header + kartlar + footer
     UsageCardView.swift       aylık kota kartı (yüzde/bar/rozet/reset)
@@ -124,9 +124,9 @@ CursorMeter/
     Date+Reset.swift          relativeDescription, billing cycle helpers
   Resources/
     Info.plist                LSUIElement=YES, ATS kısıtı (sadece cursor.com)
-    CursorMeter.entitlements  Keychain, network client, hardened runtime
+    CursorMeterFS.entitlements  Keychain, network client, hardened runtime
     Assets.xcassets           AppIcon, MenuBarIcon
-CursorMeterTests/
+CursorMeterFSTests/
   JWTDecoderTests.swift       JWT decode, userId, session token format, expiry
   UsageStatusTests.swift      eşik mantığı, Plan parse, Date helpers
   CursorAPIClientTests.swift  mock response parse, dinamik kota, defensive decode
@@ -145,15 +145,15 @@ brew install xcodegen
 xcodegen generate
 
 # 3. Aç + derle
-open CursorMeter.xcodeproj
+open CursorMeterFS.xcodeproj
 # Xcode → Product → Run  (⌘R)
 # İlk çalıştırmada: Signing & Capabilities → Team seç (Personal Team yeterli)
 ```
 
 ### CLI ile build & test
 ```bash
-xcodebuild -scheme CursorMeter -destination "platform=macOS" build
-xcodebuild -scheme CursorMeter -destination "platform=macOS" test
+xcodebuild -scheme CursorMeterFS -destination "platform=macOS" build
+xcodebuild -scheme CursorMeterFS -destination "platform=macOS" test
 ```
 
 ---

@@ -114,7 +114,7 @@ enum KeychainService {
         }
     }
 
-    /// Clears all CursorMeter entries from the Keychain (used on "Sign out").
+    /// Clears all CursorMeterFS entries from the Keychain (used on "Sign out").
     static func deleteAll() {
         Key.allCases.forEach { key in
             try? delete(key: key)
