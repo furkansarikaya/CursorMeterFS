@@ -1,7 +1,7 @@
-# CursorMeterFS
+# CursorMeterFSFS
 
 <p align="center">
-  <img src="docs/screenshots/icon.png" width="128" alt="CursorMeterFS">
+  <img src="docs/screenshots/icon.png" width="128" alt="CursorMeterFSFS">
 </p>
 
 <p align="center">
@@ -38,11 +38,11 @@
 
 ---
 
-## Why CursorMeter?
+## Why CursorMeterFS?
 
 Instead of opening Cursor's web dashboard, a single glance at your menu bar tells you how much of your monthly quota you've used, which model consumed how many tokens, and what you've spent.
 
-| | CursorMeter | cursor.com/dashboard |
+| | CursorMeterFS | cursor.com/dashboard |
 |---|---|---|
 | Always visible | ✅ | ❌ (requires opening a browser) |
 | Notifications | ✅ Alerts on threshold breach | ❌ |
@@ -55,7 +55,7 @@ Instead of opening Cursor's web dashboard, a single glance at your menu bar tell
 ## Features
 
 ### Zero-Setup Auth
-If Cursor is already installed and you're signed in — nothing else is needed. CursorMeterFS reads Cursor's local database **read-only** and picks up your identity automatically. No copying session IDs, no pasting tokens.
+If Cursor is already installed and you're signed in — nothing else is needed. CursorMeterFSFS reads Cursor's local database **read-only** and picks up your identity automatically. No copying session IDs, no pasting tokens.
 
 ### Dynamic Quota Tracking
 Your monthly request limit is fetched from the API in real time. If your plan changes (Free → Pro, Pro → Ultra) the limit updates automatically — nothing is hardcoded.
@@ -92,11 +92,11 @@ Tokens are stored exclusively in the macOS Keychain, encrypted. The Cursor datab
 
 ### Option 1 — Release DMG *(fastest)*
 
-1. Download the latest `CursorMeter-vX.Y.Z.dmg` from the [Releases](../../releases) page.
-2. Open the DMG → drag CursorMeter to **Applications**.
+1. Download the latest `CursorMeterFS-vX.Y.Z.dmg` from the [Releases](../../releases) page.
+2. Open the DMG → drag CursorMeterFS to **Applications**.
 3. On first launch macOS may show an "unverified developer" warning:
    - Go to **System Settings → Privacy & Security → Open Anyway**.
-4. The CursorMeter icon appears in your menu bar — done.
+4. The CursorMeterFS icon appears in your menu bar — done.
 
 ---
 
@@ -113,8 +113,8 @@ brew install xcodegen
 #### 2. Clone the repo
 
 ```bash
-git clone https://github.com/furkansarikaya/CursorMeterFS.git
-cd CursorMeterFS
+git clone https://github.com/furkansarikaya/CursorMeterFSFS.git
+cd CursorMeterFSFS
 ```
 
 #### 3. Generate the Xcode project
@@ -126,12 +126,12 @@ xcodegen generate
 #### 4. Open and run in Xcode
 
 ```bash
-open CursorMeter.xcodeproj
+open CursorMeterFS.xcodeproj
 ```
 
 Once Xcode opens:
 
-1. Click the **CursorMeter** project in the left panel.
+1. Click the **CursorMeterFS** project in the left panel.
 2. Go to **Signing & Capabilities**.
 3. Select your Apple ID under **Team** — a *Personal Team* is free and sufficient.
 4. Press **⌘R** to run.
@@ -149,15 +149,15 @@ No admin rights required — useful when you can't install a DMG.
 brew install xcodegen
 
 # 2. Clone
-git clone https://github.com/furkansarikaya/CursorMeterFS.git
-cd CursorMeterFS
+git clone https://github.com/furkansarikaya/CursorMeterFSFS.git
+cd CursorMeterFSFS
 
 # 3. Generate Xcode project
 xcodegen generate
 
 # 4. Build (unsigned — for local development)
 xcodebuild \
-  -scheme CursorMeter \
+  -scheme CursorMeterFS \
   -configuration Release \
   -destination "platform=macOS" \
   CODE_SIGN_IDENTITY="-" \
@@ -166,10 +166,10 @@ xcodebuild \
 
 # 5. Run
 open "$(xcodebuild \
-  -scheme CursorMeter \
+  -scheme CursorMeterFS \
   -configuration Release \
   -showBuildSettings 2>/dev/null \
-  | awk '/BUILT_PRODUCTS_DIR/{print $3}')/CursorMeter.app"
+  | awk '/BUILT_PRODUCTS_DIR/{print $3}')/CursorMeterFS.app"
 ```
 
 > **Note:** An unsigned build runs only on your own Mac and cannot be submitted to the App Store.
@@ -182,7 +182,7 @@ On first launch macOS may show a few permission dialogs — **these are expected
 
 | Permission | Why It's Needed | If You Deny |
 |------------|----------------|-------------|
-| **"CursorMeter wants to access data from other apps"** | Cursor's local database (`state.vscdb`) is read read-only to retrieve your session | Auto-detection won't work |
+| **"CursorMeterFS wants to access data from other apps"** | Cursor's local database (`state.vscdb`) is read read-only to retrieve your session | Auto-detection won't work |
 | **Keychain access** | The retrieved token is saved encrypted in the macOS Keychain so the database isn't read again on subsequent launches | The database is re-read on every launch |
 | **Notification permission** | Alerts are sent when usage thresholds are crossed | Notifications won't appear; the app continues working |
 
@@ -248,7 +248,7 @@ Open via right-click → **Settings**, or the gear icon at the bottom of the pop
 
 ## How It Works
 
-CursorMeterFS reads Cursor's local SQLite database **read-only**:
+CursorMeterFSFS reads Cursor's local SQLite database **read-only**:
 
 ```
 ~/Library/Application Support/Cursor/User/globalStorage/state.vscdb
@@ -301,9 +301,9 @@ sqlite3 ~/Library/Application\ Support/Cursor/User/globalStorage/state.vscdb \
   "SELECT key, length(value) FROM ItemTable WHERE key LIKE 'cursorAuth%';"
 ```
 
-If a `cursorAuth/accessToken` row appears, the token is present. Restart Cursor, then click **Settings → Retry Detection** in CursorMeter.
+If a `cursorAuth/accessToken` row appears, the token is present. Restart Cursor, then click **Settings → Retry Detection** in CursorMeterFS.
 
-> Don't copy and paste the token manually. CursorMeter handles this automatically and securely.
+> Don't copy and paste the token manually. CursorMeterFS handles this automatically and securely.
 
 ### Data Not Updating
 
@@ -312,7 +312,7 @@ If a `cursorAuth/accessToken` row appears, the token is present. Restart Cursor,
 
 ### Notifications Not Arriving
 
-Go to **System Settings → Notifications → CursorMeter** and verify that notifications are enabled. You can also confirm with the **"Send Test Notification"** button in Settings.
+Go to **System Settings → Notifications → CursorMeterFS** and verify that notifications are enabled. You can also confirm with the **"Send Test Notification"** button in Settings.
 
 ---
 
