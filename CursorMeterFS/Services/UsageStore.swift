@@ -18,6 +18,7 @@ final class UsageStore: ObservableObject {
     @Published var appState: AppState = .loading
     @Published var usage: UsageData = .placeholder
     @Published var recentEvents: [UsageEvent] = []
+    @Published var modelBreakdown: [String: Int] = [:]   // model → request count from /api/usage
     @Published var lastRefreshed: Date?
     @Published var isRefreshing: Bool = false
 
@@ -89,6 +90,7 @@ final class UsageStore: ObservableObject {
         accountEmail = ""
         usage = .placeholder
         recentEvents = []
+        modelBreakdown = [:]
         appState = .loggedOut
         stopTimer()
     }
@@ -109,7 +111,7 @@ final class UsageStore: ObservableObject {
         }
 
         currentSessionToken = token
-        currentUserId = userId
+        currentUserId       = userId
         if let email { accountEmail = email }
 
         // 2. Fetch usage
@@ -161,9 +163,15 @@ final class UsageStore: ObservableObject {
                 .prefix(recentRequestCount)
                 .map { $0 }
 
+            // Model breakdown from /api/usage (always available, even for quota-only users)
+            let breakdown = (usageData.models ?? [:])
+                .compactMapValues { $0.numRequests }
+                .filter { $0.value > 0 }
+
             // 7. Update state on main thread (already @MainActor)
             usage = newUsage
             recentEvents = events
+            modelBreakdown = breakdown
             lastRefreshed = Date()
             appState = .ready
 

@@ -123,9 +123,13 @@ struct PopoverRootView: View {
             OnDemandCardView(usage: store.usage)
         }
 
-        // Recent requests
-        if store.showRecentRequests && !store.recentEvents.isEmpty {
-            RecentRequestsView(events: Array(store.recentEvents.prefix(store.recentRequestCount)))
+        // Recent requests (on-demand events) or model breakdown (quota users)
+        if store.showRecentRequests {
+            if !store.recentEvents.isEmpty {
+                RecentRequestsView(events: Array(store.recentEvents.prefix(store.recentRequestCount)))
+            } else if !store.modelBreakdown.isEmpty {
+                ModelBreakdownView(breakdown: store.modelBreakdown, total: store.usage.used)
+            }
         }
     }
 
@@ -198,6 +202,79 @@ private struct OnDemandCardView: View {
         .environmentObject(UsageStore.previewLoggedOut)
 }
 #endif
+
+// MARK: - Model breakdown card (shown when invoice has no per-request events)
+
+private struct ModelBreakdownView: View {
+    let breakdown: [String: Int]
+    let total: Int
+
+    private var sorted: [(model: String, count: Int)] {
+        breakdown
+            .map { (model: $0.key, count: $0.value) }
+            .sorted { $0.count > $1.count }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Usage by Model", systemImage: "chart.bar.fill")
+                .font(.subheadline.weight(.semibold))
+
+            ForEach(sorted, id: \.model) { entry in
+                HStack(spacing: 8) {
+                    Text(displayName(entry.model))
+                        .font(.caption)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Text("\(entry.count)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.secondary)
+                    GeometryReader { geo in
+                        let fraction = total > 0 ? Double(entry.count) / Double(total) : 0
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.accentColor.opacity(0.25))
+                            .frame(width: geo.size.width)
+                            .overlay(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color.accentColor)
+                                    .frame(width: geo.size.width * fraction)
+                            }
+                    }
+                    .frame(width: 60, height: 6)
+                }
+            }
+        }
+        .padding(14)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(12)
+    }
+
+    private func displayName(_ model: String) -> String {
+        let known: [(prefix: String, name: String)] = [
+            ("claude-opus-4",         "Claude Opus 4"),
+            ("claude-sonnet-4",       "Claude Sonnet 4"),
+            ("claude-haiku-4",        "Claude Haiku 4"),
+            ("claude-3-5-sonnet",     "Claude Sonnet 3.5"),
+            ("claude-3-5-haiku",      "Claude Haiku 3.5"),
+            ("claude-3-opus",         "Claude Opus 3"),
+            ("claude-3-sonnet",       "Claude Sonnet 3"),
+            ("gpt-4o-mini",           "GPT-4o mini"),
+            ("gpt-4o",                "GPT-4o"),
+            ("gpt-4",                 "GPT-4"),
+            ("o3-mini",               "o3-mini"),
+            ("o3",                    "o3"),
+            ("o1-mini",               "o1-mini"),
+            ("o1",                    "o1"),
+            ("gemini-2.0-flash",      "Gemini 2.0 Flash"),
+            ("gemini-2.5-pro",        "Gemini 2.5 Pro"),
+            ("gemini-1.5-pro",        "Gemini 1.5 Pro"),
+        ]
+        let lower = model.lowercased()
+        for entry in known where lower.contains(entry.prefix) { return entry.name }
+        return model.prefix(1).uppercased() + model.dropFirst()
+    }
+}
 
 // MARK: - Notification name
 extension Notification.Name {
