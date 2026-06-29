@@ -108,8 +108,10 @@ struct OnboardingView: View {
     }
 }
 
+#if DEBUG
 #Preview("Onboarding") {
     OnboardingView()
         .environmentObject(UsageStore.previewLoggedOut)
         .frame(width: 300)
 }
+#endif

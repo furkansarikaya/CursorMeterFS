@@ -103,6 +103,7 @@ struct StatusBadge: View {
     }
 }
 
+#if DEBUG
 #Preview {
     UsageCardView(
         title: "Monthly Quota",
@@ -123,3 +124,4 @@ struct StatusBadge: View {
     .frame(width: 280)
     .padding()
 }
+#endif

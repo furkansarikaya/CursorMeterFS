@@ -16,7 +16,9 @@ struct SettingsView: View {
     }
 }
 
+#if DEBUG
 #Preview("Settings") {
     SettingsView()
         .environmentObject(UsageStore.preview)
 }
+#endif

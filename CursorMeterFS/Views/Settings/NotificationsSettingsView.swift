@@ -60,11 +60,13 @@ struct NotificationsSettingsView: View {
     }
 }
 
+#if DEBUG
 #Preview("Notifications Settings") {
     NotificationsSettingsView()
         .environmentObject(UsageStore.preview)
         .frame(width: 480, height: 400)
 }
+#endif
 
 // MARK: - Threshold slider
 private struct ThresholdSlider: View {

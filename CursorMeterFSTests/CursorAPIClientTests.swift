@@ -101,6 +101,30 @@ final class CursorAPIClientTests: XCTestCase {
         XCTAssertEqual(invoice.usageEvents?.count, 1)
     }
 
+    func test_invoiceResponse_parsesUsageItemsFallback() throws {
+        // Cursor API has historically used "usageItems" — must decode correctly
+        let json = """
+        {
+            "usageBasedCents": 500,
+            "usageItems": [
+                {
+                    "id": "evt2",
+                    "model": "gpt-4o",
+                    "inputTokens": 800,
+                    "outputTokens": 200,
+                    "totalCost": 0.002,
+                    "timestamp": "2026-06-15T11:00:00Z",
+                    "kind": "chat"
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        let invoice = try JSONDecoder().decode(InvoiceResponse.self, from: json)
+        XCTAssertEqual(invoice.totalUSD, 5.0, accuracy: 0.001)
+        XCTAssertEqual(invoice.usageEvents?.count, 1)
+    }
+
     func test_invoiceResponse_missingEvents_doesNotCrash() throws {
         let json = #"{"usageBasedCents": 0}"#.data(using: .utf8)!
         let invoice = try JSONDecoder().decode(InvoiceResponse.self, from: json)

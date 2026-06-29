@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     name: Build & Release
-    runs-on: macos-15
+    runs-on: macos-latest
     permissions:
       contents: write
 
@@ -16,8 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -switch /Applications/Xcode_16.2.app
+      - name: Select latest Xcode
+        run: |
+          # Pick the highest-versioned Xcode available on this runner
+          LATEST=$(ls /Applications | grep -E '^Xcode_[0-9]' | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then
+            sudo xcode-select -switch "/Applications/$LATEST/Contents/Developer"
+          fi
+          xcodebuild -version
+          xcrun swift --version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -25,7 +32,7 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build Release (ad-hoc signed)
+      - name: Build Release
         run: |
           xcodebuild \
             -scheme CursorMeterFS \
@@ -33,8 +40,8 @@ jobs:
             -destination "platform=macOS" \
             -derivedDataPath build/DerivedData \
             CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES \
             build
 
       - name: Locate .app
@@ -42,6 +49,14 @@ jobs:
         run: |
           APP=$(find build/DerivedData -name "CursorMeterFS.app" -maxdepth 6 | head -1)
           echo "path=$APP" >> "$GITHUB_OUTPUT"
+          echo "Found app at: $APP"
+
+      - name: Re-sign with proper ad-hoc signature
+        run: |
+          # Ensures Info.plist is bound and resources are sealed — required on macOS 26+
+          codesign --force --deep --sign - "${{ steps.app_path.outputs.path }}"
+          codesign --verify --deep "${{ steps.app_path.outputs.path }}"
+          codesign -dv "${{ steps.app_path.outputs.path }}" 2>&1
 
       - name: Create DMG
         run: |
@@ -66,10 +81,11 @@ jobs:
             1. Download `CursorMeterFS-${{ github.ref_name }}.dmg`
             2. Open the DMG → drag CursorMeterFS to Applications
             3. On first launch: **System Settings → Privacy & Security → Open Anyway**
+               (or run: `xattr -cr /Applications/CursorMeterFS.app`)
             4. Launch CursorMeterFS — it detects your Cursor login automatically
 
             ### Requirements
-            - macOS 13.0+
+            - macOS 13.0+ (tested on macOS 26)
             - Cursor installed and signed in
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

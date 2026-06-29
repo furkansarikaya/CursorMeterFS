@@ -75,7 +75,9 @@ struct AboutView: View {
     }
 }
 
+#if DEBUG
 #Preview("About") {
     AboutView()
         .frame(width: 480, height: 420)
 }
+#endif

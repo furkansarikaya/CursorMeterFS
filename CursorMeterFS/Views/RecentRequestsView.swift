@@ -89,6 +89,7 @@ private struct RequestRowView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     RecentRequestsView(events: [
         UsageEvent(
@@ -105,3 +106,4 @@ private struct RequestRowView: View {
     .frame(width: 280)
     .padding()
 }
+#endif

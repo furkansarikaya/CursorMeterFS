@@ -293,10 +293,22 @@ struct InvoiceResponse: Decodable {
     let items: [InvoiceItem]?
     let usageEvents: [UsageEvent.RawItem]?
 
+    // Custom decoder: Cursor API has returned events under both "usageEvents" and
+    // "usageItems" at different times — try both so a server-side rename doesn't
+    // silently empty the recent-requests list.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        usageBasedCents = try? c.decode(Int.self, forKey: .usageBasedCents)
+        items           = try? c.decode([InvoiceItem].self, forKey: .items)
+        usageEvents     = (try? c.decode([UsageEvent.RawItem].self, forKey: .usageEvents))
+                       ?? (try? c.decode([UsageEvent.RawItem].self, forKey: .usageItems))
+    }
+
     enum CodingKeys: String, CodingKey {
         case usageBasedCents
         case items
         case usageEvents
+        case usageItems
     }
 
     var totalUSD: Double { Double(usageBasedCents ?? 0) / 100.0 }

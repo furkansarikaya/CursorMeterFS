@@ -151,11 +151,13 @@ struct GeneralSettingsView: View {
     }
 }
 
+#if DEBUG
 #Preview("General Settings") {
     GeneralSettingsView()
         .environmentObject(UsageStore.preview)
         .frame(width: 480, height: 520)
 }
+#endif
 
 // MARK: - Icon Style Preview Cell
 private struct IconStyleCell: View {

@@ -187,6 +187,7 @@ private struct OnDemandCardView: View {
     }
 }
 
+#if DEBUG
 #Preview("Popover — Ready") {
     PopoverRootView()
         .environmentObject(UsageStore.preview)
@@ -196,6 +197,7 @@ private struct OnDemandCardView: View {
     PopoverRootView()
         .environmentObject(UsageStore.previewLoggedOut)
 }
+#endif
 
 // MARK: - Notification name
 extension Notification.Name {
