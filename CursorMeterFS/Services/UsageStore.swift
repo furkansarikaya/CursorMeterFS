@@ -265,24 +265,26 @@ final class UsageStore: ObservableObject {
 // MARK: - Settings enums
 
 enum MenuBarIconStyle: String, CaseIterable, Identifiable {
-    case battery   = "battery"
-    case circular  = "circular"
-    case minimal   = "minimal"
-    case segments  = "segments"
-    case dualBar   = "dualBar"
-    case countBar  = "countBar"
-    case gauge     = "gauge"
+    case battery      = "battery"
+    case circular     = "circular"
+    case minimal      = "minimal"
+    case minimalCount = "minimalCount"
+    case segments     = "segments"
+    case dualBar      = "dualBar"
+    case countBar     = "countBar"
+    case gauge        = "gauge"
 
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .battery:  return "Battery"
-        case .circular: return "Circular"
-        case .minimal:  return "Minimal"
-        case .segments: return "Segments"
-        case .dualBar:  return "Dual Bar %"
-        case .countBar: return "Dual Bar #"
-        case .gauge:    return "Gauge"
+        case .battery:      return "Battery"
+        case .circular:     return "Circular"
+        case .minimal:      return "Minimal %"
+        case .minimalCount: return "Minimal #"
+        case .segments:     return "Segments"
+        case .dualBar:      return "Dual Bar %"
+        case .countBar:     return "Dual Bar #"
+        case .gauge:        return "Gauge"
         }
     }
 }

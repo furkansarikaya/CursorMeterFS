@@ -24,13 +24,14 @@ enum MenuBarIconRenderer {
             : .secondaryLabelColor
 
         switch style {
-        case .battery:  return batteryImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .circular: return circularImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .minimal:  return minimalImage(fraction: fraction, used: used, total: total, color: color, isTemplate: !isColor)
-        case .segments: return segmentsImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .dualBar:  return dualBarImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .countBar: return countBarImage(used: used, total: total, fraction: fraction, color: color, isTemplate: !isColor)
-        case .gauge:    return gaugeImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .battery:      return batteryImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .circular:     return circularImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .minimal:      return minimalPctImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .minimalCount: return minimalCountImage(used: used, total: total, color: color, isTemplate: !isColor)
+        case .segments:     return segmentsImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .dualBar:      return dualBarImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .countBar:     return countBarImage(used: used, total: total, fraction: fraction, color: color, isTemplate: !isColor)
+        case .gauge:        return gaugeImage(fraction: fraction, color: color, isTemplate: !isColor)
         }
     }
 
@@ -101,40 +102,39 @@ enum MenuBarIconRenderer {
         }.templateIfNeeded(isTemplate)
     }
 
-    // MARK: - Minimal (percentage + count)
+    // MARK: - Minimal % (percentage only)
 
-    static func minimalImage(fraction: Double, used: Int, total: Int, color: NSColor, isTemplate: Bool) -> NSImage {
-        func fmt(_ n: Int) -> String { n >= 1000 ? "\(n / 1000)k" : "\(n)" }
-
-        let pct     = Int(fraction * 100)
-        let pctStr  = "\(pct)%"
-        let cntStr  = total > 0 ? " \(fmt(used))/\(fmt(total))" : ""
-
-        let fgColor = isTemplate ? NSColor.labelColor : color
-        let pctAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold),
-            .foregroundColor: fgColor,
+    static func minimalPctImage(fraction: Double, color: NSColor, isTemplate: Bool) -> NSImage {
+        let str = "\(Int(fraction * 100))%"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: isTemplate ? NSColor.labelColor : color,
         ]
-        let cntAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.monospacedDigitSystemFont(ofSize: 9.5, weight: .regular),
-            .foregroundColor: fgColor.withAlphaComponent(0.75),
-        ]
-
-        let pctAS  = NSAttributedString(string: pctStr, attributes: pctAttrs)
-        let cntAS  = NSAttributedString(string: cntStr, attributes: cntAttrs)
-
-        // Combine into a single attributed string
-        let combined = NSMutableAttributedString(attributedString: pctAS)
-        combined.append(cntAS)
-
-        let textSize = combined.size()
-        let imgW = max(textSize.width + 4, 32)
-        let size = NSSize(width: imgW, height: 18)
-
+        let attrStr = NSAttributedString(string: str, attributes: attrs)
+        let textSize = attrStr.size()
+        let size = NSSize(width: max(textSize.width + 4, 32), height: 18)
         return NSImage(size: size, flipped: false) { rect in
-            let x = (rect.width - textSize.width) / 2
-            let y = (rect.height - textSize.height) / 2
-            combined.draw(at: NSPoint(x: x, y: y))
+            attrStr.draw(at: NSPoint(x: (rect.width - textSize.width) / 2,
+                                     y: (rect.height - textSize.height) / 2))
+            return true
+        }.templateIfNeeded(isTemplate)
+    }
+
+    // MARK: - Minimal # (count only: "940/1k")
+
+    static func minimalCountImage(used: Int, total: Int, color: NSColor, isTemplate: Bool) -> NSImage {
+        func fmt(_ n: Int) -> String { n >= 1000 ? "\(n / 1000)k" : "\(n)" }
+        let str = total > 0 ? "\(fmt(used))/\(fmt(total))" : "\(fmt(used))"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: isTemplate ? NSColor.labelColor : color,
+        ]
+        let attrStr = NSAttributedString(string: str, attributes: attrs)
+        let textSize = attrStr.size()
+        let size = NSSize(width: max(textSize.width + 4, 32), height: 18)
+        return NSImage(size: size, flipped: false) { rect in
+            attrStr.draw(at: NSPoint(x: (rect.width - textSize.width) / 2,
+                                     y: (rect.height - textSize.height) / 2))
             return true
         }.templateIfNeeded(isTemplate)
     }
