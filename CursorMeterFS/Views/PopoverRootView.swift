@@ -181,8 +181,6 @@ struct PopoverRootView: View {
     private var footer: some View {
         HStack {
             Button("Settings") {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                // Fallback for older macOS:
                 NotificationCenter.default.post(name: .openSettings, object: nil)
             }
             .font(.callout)
