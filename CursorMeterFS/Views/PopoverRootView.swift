@@ -29,36 +29,80 @@ struct PopoverRootView: View {
 
     // MARK: - Header
     private var header: some View {
-        HStack {
-            Text("Cursor Usage")
-                .font(.headline)
-                .fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Cursor Usage")
+                    .font(.headline)
+                    .fontWeight(.semibold)
 
-            Spacer()
+                Spacer()
 
-            // Last refreshed indicator
-            if let refreshed = store.lastRefreshed {
-                Text(refreshed, style: .relative)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                if let refreshed = store.lastRefreshed {
+                    Text(refreshed, style: .relative)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Button {
+                    Task { await store.refresh() }
+                } label: {
+                    Image(systemName: store.isRefreshing ? "arrow.clockwise.circle" : "arrow.clockwise")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .rotationEffect(store.isRefreshing ? .degrees(360) : .zero)
+                        .animation(store.isRefreshing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default,
+                                   value: store.isRefreshing)
+                }
+                .buttonStyle(.plain)
+                .help("Refresh usage data")
             }
 
-            // Refresh button
-            Button {
-                Task { await store.refresh() }
-            } label: {
-                Image(systemName: store.isRefreshing ? "arrow.clockwise.circle" : "arrow.clockwise")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .rotationEffect(store.isRefreshing ? .degrees(360) : .zero)
-                    .animation(store.isRefreshing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default,
-                               value: store.isRefreshing)
+            // User identity row (only when signed in and email is known)
+            if case .loggedOut = store.appState { } else if case .loading = store.appState { } else {
+                userInfoRow
             }
-            .buttonStyle(.plain)
-            .help("Refresh usage data")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private var userInfoRow: some View {
+        if !store.accountEmail.isEmpty {
+            HStack(spacing: 6) {
+                // Email
+                Text(store.accountEmail)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                Spacer(minLength: 0)
+
+                // Team badge
+                if !store.teamName.isEmpty {
+                    HStack(spacing: 3) {
+                        Image(systemName: "building.2")
+                            .font(.caption2)
+                        Text(store.teamName)
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                }
+
+                // Admin badge
+                if store.isTeamAdmin {
+                    Text("Admin")
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Color.accentColor.opacity(0.15))
+                        .foregroundColor(.accentColor)
+                        .cornerRadius(3)
+                }
+            }
+        }
     }
 
     // MARK: - Content

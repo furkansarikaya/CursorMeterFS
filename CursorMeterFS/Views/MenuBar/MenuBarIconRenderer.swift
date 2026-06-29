@@ -12,6 +12,8 @@ enum MenuBarIconRenderer {
 
     static func image(
         fraction: Double,
+        used: Int = 0,
+        total: Int = 0,
         status: UsageStatus,
         style: MenuBarIconStyle,
         colorMode: IconColorMode
@@ -27,6 +29,7 @@ enum MenuBarIconRenderer {
         case .minimal:  return minimalImage(fraction: fraction, color: color, isTemplate: !isColor)
         case .segments: return segmentsImage(fraction: fraction, color: color, isTemplate: !isColor)
         case .dualBar:  return dualBarImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .countBar: return countBarImage(used: used, total: total, fraction: fraction, color: color, isTemplate: !isColor)
         case .gauge:    return gaugeImage(fraction: fraction, color: color, isTemplate: !isColor)
         }
     }
@@ -188,6 +191,45 @@ enum MenuBarIconRenderer {
 
             // Percentage text
             pctAS.draw(at: NSPoint(x: barX + barW + gap, y: (rect.height - pctSize.height) / 2))
+            return true
+        }.templateIfNeeded(isTemplate)
+    }
+
+    // MARK: - Count Bar (compact horizontal bar + "used/total")
+
+    static func countBarImage(used: Int, total: Int, fraction: Double, color: NSColor, isTemplate: Bool) -> NSImage {
+        // Format: "937/1k", "42/500", "1.2k/2k" etc.
+        func fmt(_ n: Int) -> String {
+            if n >= 1000 { return "\(n / 1000)k" }
+            return "\(n)"
+        }
+        let countStr = total > 0 ? "\(fmt(used))/\(fmt(total))" : "\(fmt(used))"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 9.5, weight: .medium),
+            .foregroundColor: isTemplate ? NSColor.labelColor : color,
+        ]
+        let countAS   = NSAttributedString(string: countStr, attributes: attrs)
+        let countSize = countAS.size()
+
+        let barW: CGFloat = 22
+        let gap:  CGFloat = 3
+        let totalW = barW + gap + countSize.width + 2
+
+        return NSImage(size: NSSize(width: totalW, height: 18), flipped: false) { rect in
+            let barH: CGFloat = 4
+            let barX: CGFloat = 0
+            let barY = (rect.height - barH) / 2
+
+            let track = NSBezierPath(roundedRect: NSRect(x: barX, y: barY, width: barW, height: barH), xRadius: 2, yRadius: 2)
+            NSColor.labelColor.withAlphaComponent(0.18).setFill()
+            track.fill()
+
+            let fillW = max(barH, barW * CGFloat(fraction))
+            let fill = NSBezierPath(roundedRect: NSRect(x: barX, y: barY, width: fillW, height: barH), xRadius: 2, yRadius: 2)
+            color.setFill()
+            fill.fill()
+
+            countAS.draw(at: NSPoint(x: barX + barW + gap, y: (rect.height - countSize.height) / 2))
             return true
         }.templateIfNeeded(isTemplate)
     }

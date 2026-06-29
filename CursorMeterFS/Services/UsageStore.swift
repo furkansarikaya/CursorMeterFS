@@ -52,6 +52,9 @@ final class UsageStore: ObservableObject {
         didSet { UserDefaults.standard.set(iconColorMode.rawValue, forKey: "iconColorMode") }
     }
     @Published var accountEmail: String = ""
+    @Published var teamName: String = ""
+    @Published var isTeamAdmin: Bool = false
+    @Published var isEnterpriseUser: Bool = false
     @Published var exportEnabled: Bool {
         didSet { UserDefaults.standard.set(exportEnabled, forKey: "exportEnabled") }
     }
@@ -86,12 +89,15 @@ final class UsageStore: ObservableObject {
 
     func signOut() {
         currentSessionToken = nil
-        currentUserId = nil
-        accountEmail = ""
-        usage = .placeholder
-        recentEvents = []
-        modelBreakdown = [:]
-        appState = .loggedOut
+        currentUserId       = nil
+        accountEmail        = ""
+        teamName            = ""
+        isTeamAdmin         = false
+        isEnterpriseUser    = false
+        usage               = .placeholder
+        recentEvents        = []
+        modelBreakdown      = [:]
+        appState            = .loggedOut
         stopTimer()
     }
 
@@ -126,10 +132,11 @@ final class UsageStore: ObservableObject {
                 teamId: teamId,
                 includeEvents: showRecentRequests
             )
-            async let hardLimitResp = apiClient.fetchHardLimit(sessionToken: token, teamId: teamId)
+            async let hardLimitResp     = apiClient.fetchHardLimit(sessionToken: token, teamId: teamId)
             async let usageBasedEnabled = apiClient.fetchUsageBasedEnabled(sessionToken: token, teamId: teamId)
+            async let meResp            = apiClient.fetchMe(sessionToken: token)
 
-            let (usageData, invoice, hardLimit, ubEnabled) = try await (usageResp, invoiceResp, hardLimitResp, usageBasedEnabled)
+            let (usageData, invoice, hardLimit, ubEnabled, me) = try await (usageResp, invoiceResp, hardLimitResp, usageBasedEnabled, meResp)
 
             // 3. Parse billing cycle start
             let billingStart: Date
@@ -176,6 +183,10 @@ final class UsageStore: ObservableObject {
             usage = newUsage
             recentEvents = events
             modelBreakdown = breakdown
+            if let t = me.teamName,   !t.isEmpty  { teamName       = t }
+            if let a = me.isTeamAdmin              { isTeamAdmin    = a }
+            if let e = me.isEnterpriseUser         { isEnterpriseUser = e }
+            if let em = me.email, !em.isEmpty      { accountEmail   = em }
             lastRefreshed = Date()
             appState = .ready
 
@@ -259,6 +270,7 @@ enum MenuBarIconStyle: String, CaseIterable, Identifiable {
     case minimal   = "minimal"
     case segments  = "segments"
     case dualBar   = "dualBar"
+    case countBar  = "countBar"
     case gauge     = "gauge"
 
     var id: String { rawValue }
@@ -268,7 +280,8 @@ enum MenuBarIconStyle: String, CaseIterable, Identifiable {
         case .circular: return "Circular"
         case .minimal:  return "Minimal"
         case .segments: return "Segments"
-        case .dualBar:  return "Dual Bar"
+        case .dualBar:  return "Dual Bar %"
+        case .countBar: return "Dual Bar #"
         case .gauge:    return "Gauge"
         }
     }

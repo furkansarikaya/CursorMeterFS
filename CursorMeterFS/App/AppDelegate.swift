@@ -86,6 +86,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         button.image = MenuBarIconRenderer.image(
             fraction: fraction,
+            used: store.usage.used,
+            total: store.usage.total,
             status: status,
             style: store.iconStyle,
             colorMode: store.iconColorMode

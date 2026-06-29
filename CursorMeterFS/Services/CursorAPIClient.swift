@@ -135,6 +135,27 @@ actor CursorAPIClient {
         }
     }
 
+    /// Fetches account identity, team membership, and admin status.
+    func fetchMe(sessionToken: String) async throws -> MeResponse {
+        guard let url = URL(string: "\(baseURL)/api/dashboard/get-me") else {
+            throw APIError.invalidHost(baseURL)
+        }
+        try validateHost(url)
+
+        var req = URLRequest(url: url, timeoutInterval: timeout)
+        req.httpMethod = "POST"
+        setCookieHeader(on: &req, token: sessionToken)
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: [:])
+
+        let data = try await performRequest(req, attempt: 0)
+        return (try? JSONDecoder().decode(MeResponse.self, from: data)) ?? MeResponse(
+            email: nil, teamId: nil, teamName: nil, isEnterpriseUser: nil,
+            isTeamAdmin: nil, organizationId: nil
+        )
+    }
+
     /// Checks whether on-demand (usage-based) pricing is enabled.
     func fetchUsageBasedEnabled(sessionToken: String, teamId: Int? = nil) async throws -> Bool {
         guard let url = URL(string: "\(baseURL)/api/dashboard/get-usage-based-premium-requests") else {
@@ -326,4 +347,14 @@ struct HardLimitResponse: Decodable {
     let hardLimit: Double?
     let hardLimitEnabled: Bool?
     let noUsageBasedAllowed: Bool?
+}
+
+/// `/api/dashboard/get-me` response — account identity and team membership.
+struct MeResponse: Decodable {
+    let email: String?
+    let teamId: Int?
+    let teamName: String?
+    let isEnterpriseUser: Bool?
+    let isTeamAdmin: Bool?
+    let organizationId: String?
 }

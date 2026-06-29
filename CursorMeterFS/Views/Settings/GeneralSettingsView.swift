@@ -82,6 +82,8 @@ struct GeneralSettingsView: View {
                             style: style,
                             selected: store.iconStyle == style,
                             fraction: store.usage.fraction,
+                            used: store.usage.used,
+                            total: store.usage.total,
                             status: store.usage.status(
                                 warningThreshold: store.warningThreshold,
                                 criticalThreshold: store.criticalThreshold
@@ -164,12 +166,16 @@ private struct IconStyleCell: View {
     let style: MenuBarIconStyle
     let selected: Bool
     let fraction: Double
+    var used: Int = 0
+    var total: Int = 0
     let status: UsageStatus
     let colorMode: IconColorMode
 
     private var previewImage: NSImage {
         MenuBarIconRenderer.image(
             fraction: fraction,
+            used: used,
+            total: total,
             status: status,
             style: style,
             colorMode: colorMode
