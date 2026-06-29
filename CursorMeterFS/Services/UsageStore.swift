@@ -163,10 +163,14 @@ final class UsageStore: ObservableObject {
                 .prefix(recentRequestCount)
                 .map { $0 }
 
-            // Model breakdown from /api/usage (always available, even for quota-only users)
-            let breakdown = (usageData.models ?? [:])
+            // Model breakdown from /api/usage.
+            // Cursor buckets all quota requests under "gpt-4" regardless of actual model.
+            // Only expose the breakdown when there are MULTIPLE distinct models — a single
+            // "gpt-4" entry is just the aggregate counter, not a real model label.
+            let rawBreakdown = (usageData.models ?? [:])
                 .compactMapValues { $0.numRequests }
                 .filter { $0.value > 0 }
+            let breakdown = rawBreakdown.count > 1 ? rawBreakdown : [:]
 
             // 7. Update state on main thread (already @MainActor)
             usage = newUsage
