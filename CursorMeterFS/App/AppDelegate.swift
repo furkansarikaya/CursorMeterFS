@@ -16,14 +16,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         guard ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" else { return }
-        // Single-instance enforcement: if another copy is already running, activate it and quit.
+        // Single-instance enforcement: terminate any older copies so the latest-launched version wins.
+        // "New wins" is better than "old wins" — it lets updates take effect without requiring a manual kill.
         let bundleID = Bundle.main.bundleIdentifier ?? "com.furkansarikaya.CursorMeterFS"
-        let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
             .filter { $0 != NSRunningApplication.current }
-        if !others.isEmpty {
-            others.first?.activate(options: .activateIgnoringOtherApps)
-            NSApp.terminate(nil)
-        }
+            .forEach { $0.terminate() }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
