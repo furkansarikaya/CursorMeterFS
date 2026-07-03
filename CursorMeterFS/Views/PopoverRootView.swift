@@ -37,14 +37,6 @@ struct PopoverRootView: View {
 
                 Spacer()
 
-                if let refreshed = store.lastRefreshed {
-                    // Static string computed once per store update — no live timer.
-                    // Text(_, style: .relative) drives a per-second ticker that keeps
-                    // the whole view tree rendering continuously; avoid it.
-                    Text(refreshed.shortRelativeDescription())
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
 
                 // ProgressView replaces the old .repeatForever rotation animation.
                 // .repeatForever kept the compositor spinning ~60fps even when the
