@@ -60,9 +60,14 @@ jobs:
 
       - name: Create DMG
         run: |
+          # Stage app + Applications symlink so users see the drag-to-install UI
+          mkdir -p build/dmg_staging
+          cp -R "${{ steps.app_path.outputs.path }}" build/dmg_staging/
+          ln -s /Applications build/dmg_staging/Applications
+
           hdiutil create \
             -volname "CursorMeterFS" \
-            -srcfolder "${{ steps.app_path.outputs.path }}" \
+            -srcfolder build/dmg_staging \
             -ov \
             -format UDZO \
             "build/CursorMeterFS-${{ github.ref_name }}.dmg"
