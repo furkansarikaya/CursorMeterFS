@@ -67,8 +67,11 @@ private struct RequestRowView: View {
                     .frame(width: 56, alignment: .trailing)
             }
 
-            // Relative time
-            Text(event.timestamp, style: .relative)
+            // Static relative-time string — computed once per render, no live timer.
+            // Text(_, style: .relative) installs a per-second ticker on each row;
+            // with up to 20 rows all updating concurrently this is a significant
+            // CPU drain on a retained .window-style MenuBarExtra view tree.
+            Text(event.timestamp.shortRelativeDescription())
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .frame(width: 40, alignment: .trailing)

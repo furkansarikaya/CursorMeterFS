@@ -38,23 +38,33 @@ struct PopoverRootView: View {
                 Spacer()
 
                 if let refreshed = store.lastRefreshed {
-                    Text(refreshed, style: .relative)
+                    // Static string computed once per store update — no live timer.
+                    // Text(_, style: .relative) drives a per-second ticker that keeps
+                    // the whole view tree rendering continuously; avoid it.
+                    Text(refreshed.shortRelativeDescription())
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
 
-                Button {
-                    Task { await store.refresh() }
-                } label: {
-                    Image(systemName: store.isRefreshing ? "arrow.clockwise.circle" : "arrow.clockwise")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .rotationEffect(store.isRefreshing ? .degrees(360) : .zero)
-                        .animation(store.isRefreshing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default,
-                                   value: store.isRefreshing)
+                // ProgressView replaces the old .repeatForever rotation animation.
+                // .repeatForever kept the compositor spinning ~60fps even when the
+                // popover was hidden (.window style keeps the content tree alive).
+                // ProgressView stops driving frames the moment it leaves the tree.
+                if store.isRefreshing {
+                    ProgressView()
+                        .controlSize(.small)
+                        .help("Refreshing…")
+                } else {
+                    Button {
+                        Task { await store.refresh() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Refresh usage data")
                 }
-                .buttonStyle(.plain)
-                .help("Refresh usage data")
             }
 
             // User identity row (only when signed in and email is known)

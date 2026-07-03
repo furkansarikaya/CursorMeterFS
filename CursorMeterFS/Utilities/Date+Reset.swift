@@ -1,6 +1,22 @@
 import Foundation
 
+// MARK: - Static formatter (allocated once; RelativeDateTimeFormatter is expensive to init)
+private let _relativeFormatter: RelativeDateTimeFormatter = {
+    let f = RelativeDateTimeFormatter()
+    f.unitsStyle = .abbreviated   // "3m ago", "2h ago", "1d ago"
+    f.dateTimeStyle = .numeric
+    return f
+}()
+
 extension Date {
+    /// Returns a short human-readable relative description for a **past** date.
+    /// e.g. "3 min. ago", "2 hr. ago", "1 day ago"
+    /// Uses a shared static formatter — safe to call from any view body without
+    /// allocation overhead. Does NOT install a live timer (unlike Text(_, style: .relative)).
+    func shortRelativeDescription(to now: Date = Date()) -> String {
+        _relativeFormatter.localizedString(for: self, relativeTo: now)
+    }
+
     /// Returns a human-readable relative description from a reference date.
     /// e.g. "in 3 days", "in 2 hours", "tomorrow", "today"
     func relativeDescription(from now: Date = Date()) -> String {

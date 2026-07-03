@@ -8,6 +8,21 @@ enum MenuBarIconRenderer {
     /// Size of the status item button — standard macOS height is 18pt.
     static let iconSize = NSSize(width: 32, height: 18)
 
+    // MARK: - Single-entry cache
+    // Keyed on (style, colorMode, percentInt, used, total, status).
+    // fraction is rounded to integer percent so sub-percent floating-point
+    // noise never causes spurious cache misses.
+    private struct CacheKey: Equatable {
+        let style: MenuBarIconStyle
+        let colorMode: IconColorMode
+        let percentInt: Int          // Int(fraction * 100)
+        let used: Int
+        let total: Int
+        let status: UsageStatus
+    }
+    private static var cachedKey: CacheKey?
+    private static var cachedImage: NSImage?
+
     // MARK: - Main entry point
 
     static func image(
@@ -18,21 +33,38 @@ enum MenuBarIconRenderer {
         style: MenuBarIconStyle,
         colorMode: IconColorMode
     ) -> NSImage {
+        let key = CacheKey(
+            style: style,
+            colorMode: colorMode,
+            percentInt: Int(fraction * 100),
+            used: used,
+            total: total,
+            status: status
+        )
+        if key == cachedKey, let img = cachedImage {
+            return img
+        }
+
         let isColor = colorMode == .color
         let color: NSColor = isColor
             ? .usageColor(for: status)
             : .secondaryLabelColor
 
+        let img: NSImage
         switch style {
-        case .battery:      return batteryImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .circular:     return circularImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .minimal:      return minimalPctImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .minimalCount: return minimalCountImage(used: used, total: total, color: color, isTemplate: !isColor)
-        case .segments:     return segmentsImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .dualBar:      return dualBarImage(fraction: fraction, color: color, isTemplate: !isColor)
-        case .countBar:     return countBarImage(used: used, total: total, fraction: fraction, color: color, isTemplate: !isColor)
-        case .gauge:        return gaugeImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .battery:      img = batteryImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .circular:     img = circularImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .minimal:      img = minimalPctImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .minimalCount: img = minimalCountImage(used: used, total: total, color: color, isTemplate: !isColor)
+        case .segments:     img = segmentsImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .dualBar:      img = dualBarImage(fraction: fraction, color: color, isTemplate: !isColor)
+        case .countBar:     img = countBarImage(used: used, total: total, fraction: fraction, color: color, isTemplate: !isColor)
+        case .gauge:        img = gaugeImage(fraction: fraction, color: color, isTemplate: !isColor)
         }
+
+        cachedKey   = key
+        cachedImage = img
+        return img
     }
 
     // MARK: - Battery style (≈ MacBook battery indicator)
