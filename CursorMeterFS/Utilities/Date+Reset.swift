@@ -13,8 +13,11 @@ extension Date {
     /// e.g. "3 min. ago", "2 hr. ago", "1 day ago"
     /// Uses a shared static formatter — safe to call from any view body without
     /// allocation overhead. Does NOT install a live timer (unlike Text(_, style: .relative)).
+    /// Clamped to minute resolution — sub-minute values render as "just now" rather than
+    /// a second count, since nothing in this app refreshes faster than that anyway.
     func shortRelativeDescription(to now: Date = Date()) -> String {
-        _relativeFormatter.localizedString(for: self, relativeTo: now)
+        guard now.timeIntervalSince(self) >= 60 else { return "just now" }
+        return _relativeFormatter.localizedString(for: self, relativeTo: now)
     }
 
     /// Returns a human-readable relative description from a reference date.
