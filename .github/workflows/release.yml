@@ -11,6 +11,8 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -72,25 +74,52 @@ jobs:
             -format UDZO \
             "build/CursorMeterFS-${{ github.ref_name }}.dmg"
 
+      - name: Checksum DMG
+        working-directory: build
+        run: |
+          shasum -a 256 "CursorMeterFS-${{ github.ref_name }}.dmg" \
+            > "CursorMeterFS-${{ github.ref_name }}.dmg.sha256"
+          cat "CursorMeterFS-${{ github.ref_name }}.dmg.sha256"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "build/CursorMeterFS-${{ github.ref_name }}.dmg"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/CursorMeterFS-${{ github.ref_name }}.dmg
+          files: |
+            build/CursorMeterFS-${{ github.ref_name }}.dmg
+            build/CursorMeterFS-${{ github.ref_name }}.dmg.sha256
           generate_release_notes: true
           body: |
             ## CursorMeterFS ${{ github.ref_name }}
 
-            macOS menu bar app to monitor your Cursor AI subscription usage.
+            macOS menu bar app to monitor your Codex, Claude Code, and Cursor usage.
 
             ### Installation
             1. Download `CursorMeterFS-${{ github.ref_name }}.dmg`
             2. Open the DMG → drag CursorMeterFS to Applications
-            3. On first launch: **System Settings → Privacy & Security → Open Anyway**
-               (or run: `xattr -cr /Applications/CursorMeterFS.app`)
-            4. Launch CursorMeterFS — it detects your Cursor login automatically
+            3. Clear the Gatekeeper quarantine flag (this app isn't notarized — see
+               "Is this safe?" below): `xattr -cr /Applications/CursorMeterFS.app`
+               — or go to **System Settings → Privacy & Security → Open Anyway**
+            4. Launch CursorMeterFS — it detects your local Codex/Claude/Cursor logins automatically
+
+            ### Is this safe?
+            CursorMeterFS is signed but not Apple-notarized (notarization requires a paid
+            Apple Developer account this open-source project doesn't carry) — that's the
+            entire reason macOS warns on first launch, not a finding about the code. You
+            can verify this build independently instead of trusting Apple's notarization:
+            - **Checksum:** verify `CursorMeterFS-${{ github.ref_name }}.dmg.sha256` against
+              the downloaded file with `shasum -a 256 -c CursorMeterFS-${{ github.ref_name }}.dmg.sha256`
+            - **Provenance:** confirm this exact DMG was built by GitHub Actions from this
+              tagged source with `gh attestation verify CursorMeterFS-${{ github.ref_name }}.dmg --repo ${{ github.repository }}`
+            - **Source:** the full app is open source in this repo; see also
+              [`security-report/SECURITY-REPORT.md`](https://github.com/${{ github.repository }}/blob/main/security-report/SECURITY-REPORT.md)
 
             ### Requirements
             - macOS 13.0+ (tested on macOS 26)
-            - Cursor installed and signed in
+            - At least one of: Codex CLI, Claude Code, or Cursor installed and signed in
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
