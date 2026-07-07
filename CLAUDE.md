@@ -1,7 +1,22 @@
 # CursorMeterFS — CLAUDE.md
 
-macOS menu bar uygulaması: Cursor AI abonelik kotasını gerçek zamanlı izler.
-ClaudeMeter (eddmann/ClaudeMeter) tasarımından ilham alır, veri kaynağı Cursor'dır.
+macOS menu bar uygulaması: **Codex / Claude / Cursor** kotalarını sekmeli popover'da
+gerçek zamanlı izler. CodexBar (kardeş proje) mimarisinin hafif portu.
+**Admin yetkisi gerektirmez** — tüm veriler kullanıcı-home dosyaları veya login keychain'den.
+
+## Çoklu Sağlayıcı Veri Kaynakları (hepsi admin-siz)
+
+| Sağlayıcı | Kimlik | Kota API | Offline fallback |
+|-----------|--------|----------|------------------|
+| Cursor | `state.vscdb` (read-only) | `cursor.com/api/*` | — |
+| Codex | `~/.codex/auth.json` | `chatgpt.com/backend-api/wham/usage` | `~/.codex/sessions/**` son `token_count.rate_limits` |
+| Claude | `~/.claude/.credentials.json` → Keychain `Claude Code-credentials` | `api.anthropic.com/api/oauth/usage` (`anthropic-beta: oauth-2025-04-20`) | — |
+
+Mimari kural (CodexBar'dan): **sağlayıcılar veri döndürür (`ProviderSnapshot`), UI'ı app sahiplenir.**
+Şeritler DİNAMİK: API ne döndürürse render edilir (Claude `limits[]` weekly_scoped → "<model> only";
+Codex `additional_rate_limits[]`) — model adları asla hardcode edilmez.
+Cost (USD) tahmini: yerel JSONL token sayımı × `CostPricing` tablosu (network yok).
+Token yenileme yalnız BELLEKTE tutulur — `auth.json`/`.credentials.json`'a asla yazılmaz.
 
 ---
 
@@ -43,8 +58,10 @@ Pro'da 1000, Ultra'da farklı, yarın değişebilir — her zaman API değerini 
 
 ```
 ✅ state.vscdb  → SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX (asla yazma)
-✅ Token        → sadece macOS Keychain, kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-✅ Ağ           → yalnızca https://cursor.com (host doğrulanır, AppTransportSecurity kısıtlı)
+✅ auth.json / .credentials.json → salt-okunur; yenilenen token yalnız bellekte
+✅ Keychain     → yalnız okuma: "Claude Code-credentials" (login keychain)
+✅ Ağ           → yalnız https://cursor.com, chatgpt.com, auth.openai.com,
+                  api.anthropic.com (her istekte url.host doğrulanır, ATS HTTPS-only)
 ✅ Log          → token/email asla yazdırılmaz; debug'da sadece uzunluk gösterilir
 ✅ Export       → ~/.cursormeterfs/usage.json içinde secret YOK (sadece yüzde/sayı)
 ✅ XSS          → WebView yok; tüm string'ler SwiftUI Text ile (otomatik escape)
@@ -93,23 +110,42 @@ CursorMeterFS/
     CursorMeterFSApp.swift      @main, LSUIElement=YES ile dock'tan gizli
     AppDelegate.swift         NSStatusItem, NSPopover, Settings window, Combine
   Models/
-    Plan.swift                .free/.pro/.proPlus/.ultra/.business  +  from(rawValue:)
-    UsageData.swift           used/total/fraction/percentageInt/resetDateDescription
+    Provider.swift            .codex/.claude/.cursor — displayName/ikon/brandColor
+    ProviderSnapshot.swift    RateWindow/NamedRateWindow/UsagePace/ProviderUIState
+    Plan.swift                Cursor plan tier'ları (yalnız Cursor sağlayıcısı)
+    UsageData.swift           Cursor detayları (on-demand kart, export)
     UsageEvent.swift          model/token/cost + displayModelName normalizasyonu
     UsageStatus.swift         .safe/.warning/.critical  +  from(fraction:thresholds:)
   Services/
+    Providers/
+      ProviderClient.swift        protokol: fetch() -> ProviderSnapshot
+      CursorProviderClient.swift  eski refresh gövdesi (state.vscdb + cursor.com)
+      CodexProviderClient.swift   wham/usage + session-log fallback
+      ClaudeProviderClient.swift  oauth/usage + dinamik limits[] şeritleri
+      Codex/                      CodexAuthReader/CodexAPIClient/CodexSessionLogReader
+      Claude/                     ClaudeCredentialsReader/ClaudeAPIClient
+    Cost/
+      CostPricing.swift           model→fiyat tablosu (tahmini USD)
+      CostScanner.swift           JSONL token sayımı, mtime-cache'li (actor)
     JWT.swift                 base64url decode, sub claim, exp check
     CursorTokenReader.swift   state.vscdb read-only, userId çıkarımı, session token
-    KeychainService.swift     Security framework, kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+    KeychainService.swift     Security framework (Cursor legacy)
     CursorAPIClient.swift     actor; host doğrulama; Cookie header; retry/backoff
     TeamResolver.swift        team plan teamId cache
-    UsageStore.swift          @MainActor ObservableObject; state machine; refresh timer
-    NotificationService.swift UNUserNotificationCenter; threshold takibi; spam önleme
+    UsageStore.swift          @MainActor; providerStates dict; withTaskGroup fan-out;
+                              adaptif timer; suspend/resume
+    RefreshFrequency.swift    manual/sabit/adaptive mod enum'u
+    AdaptiveRefreshPolicy.swift saf politika: etkileşim+güç+termal → cadence
+    NotificationService.swift UNUserNotificationCenter; provider-agnostik eşikler
     LoginItemService.swift    SMAppService.mainApp (macOS 13+)
     UsageExporter.swift       ~/.cursormeterfs/usage.json (sadece agregat veriler)
   Views/
-    PopoverRootView.swift     header + kartlar + footer
-    UsageCardView.swift       aylık kota kartı (yüzde/bar/rozet/reset)
+    PopoverRootView.swift     header + ProviderTabStrip + ProviderDetailView + footer
+    Providers/
+      ProviderTabStrip.swift      sekmeler: ikon + ad + marka-renkli kalan-kota çizgisi
+      ProviderDetailView.swift    plan rozeti, şeritler, cost, Cursor ekstraları
+      RateWindowRow.swift         tek kota şeridi (başlık/%/bar/reset/pace)
+    UsageCardView.swift       StatusBadge (paylaşılan)
     RecentRequestsView.swift  son N request (model + token + maliyet)
     OnboardingView.swift      Cursor login yok durumu
     Settings/

@@ -228,7 +228,7 @@ Open via right-click → **Settings**, or the gear icon at the bottom of the pop
 | Setting | Description |
 |---------|-------------|
 | **Account** | Cursor email address and plan type (read automatically) |
-| **Refresh Interval** | How often data is fetched (1 / 2 / 5 / 10 / 15 / 30 min) |
+| **Refresh Interval** | Adaptive (recommended — backs off automatically when idle, on Low Power Mode, or under thermal pressure) or a fixed interval (1 / 2 / 5 / 15 / 30 min / Manual) |
 | **Show Recent Requests** | Display the last N requests in the popover |
 | **Menu Bar Icon Style** | Battery / Circular / Minimal / Segments / Dual Bar / Gauge |
 | **Icon Color Mode** | Mono (follows system color) / Color (green–orange–red) |

@@ -30,7 +30,8 @@
     <key>NSAppleEventsUsageDescription</key>
     <string>CursorMeterFS reads the Cursor authentication token from local storage to display your usage data. No credentials are transmitted outside your device beyond the official cursor.com API.</string>
 
-    <!-- App Transport Security: allow only cursor.com -->
+    <!-- App Transport Security: HTTPS only; provider API hosts documented below
+         (cursor.com, chatgpt.com, auth.openai.com, api.anthropic.com) -->
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>
@@ -38,6 +39,27 @@
         <key>NSExceptionDomains</key>
         <dict>
             <key>cursor.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>chatgpt.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>auth.openai.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>api.anthropic.com</key>
             <dict>
                 <key>NSExceptionAllowsInsecureHTTPLoads</key>
                 <false/>

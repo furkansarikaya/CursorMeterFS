@@ -25,24 +25,31 @@ struct CursorMeterFSApp: App {
 }
 
 // MARK: - Menu bar icon label (re-renders on every store update)
+// Follows the SELECTED provider tab: switching tabs switches what the icon shows.
 
 private struct MenuBarIconLabel: View {
     @EnvironmentObject var store: UsageStore
 
     var body: some View {
-        let fraction = store.appState == .loading ? 0.0 : store.usage.fraction
-        let status = store.usage.status(
+        let provider = store.selectedProvider
+        let primary = store.state(for: provider).snapshot?.primary
+        let fraction = primary?.fraction ?? 0
+        let status = UsageStatus.from(
+            fraction: fraction,
             warningThreshold: store.warningThreshold,
             criticalThreshold: store.criticalThreshold
         )
+        // Count-based icon styles need used/total; Cursor has real request counts,
+        // other providers show percent-of-100.
+        let details = store.state(for: provider).snapshot?.cursorDetails
         Image(nsImage: MenuBarIconRenderer.image(
             fraction: fraction,
-            used: store.usage.used,
-            total: store.usage.total,
+            used: details?.used ?? (primary?.percentInt ?? 0),
+            total: details?.total ?? 100,
             status: status,
             style: store.iconStyle,
             colorMode: store.iconColorMode
         ))
-        .help("Cursor Usage: \(store.usage.percentageInt)% — click to open")
+        .help("\(provider.displayName) usage: \(primary?.percentInt ?? 0)% — click to open")
     }
 }

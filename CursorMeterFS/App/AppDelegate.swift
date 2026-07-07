@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Exposed to CursorMeterFSApp via @NSApplicationDelegateAdaptor
     let store = UsageStore()
     private var settingsWindow: NSWindow?
+    private var powerObserverTokens: [NSObjectProtocol] = []
 
     // MARK: - App lifecycle
 
@@ -25,8 +26,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
               env["XCODE_RUNNING_FOR_PREVIEWS"] != "1" else { return }
 
         setupNotifications()
+        setupPowerObservers()
         Task { await NotificationService.shared.requestAuthorization() }
         store.start()
+    }
+
+    deinit {
+        for token in powerObserverTokens {
+            NSWorkspace.shared.notificationCenter.removeObserver(token)
+        }
     }
 
     // MARK: - Settings window
@@ -61,5 +69,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openSettings,
             object: nil
         )
+    }
+
+    // MARK: - Power / sleep observers
+    //
+    // Suspends the refresh loop entirely while the system is asleep, the screen is
+    // locked, or the session is inactive (fast user switching) — no network work
+    // happens in these states regardless of the configured refresh frequency. On
+    // wake/unlock the loop resumes and does one immediate refresh.
+
+    private func setupPowerObservers() {
+        let center = NSWorkspace.shared.notificationCenter
+
+        let suspendNames: [Notification.Name] = [
+            NSWorkspace.willSleepNotification,
+            NSWorkspace.screensDidSleepNotification,
+            NSWorkspace.sessionDidResignActiveNotification
+        ]
+        let resumeNames: [Notification.Name] = [
+            NSWorkspace.didWakeNotification,
+            NSWorkspace.screensDidWakeNotification,
+            NSWorkspace.sessionDidBecomeActiveNotification
+        ]
+
+        for name in suspendNames {
+            let token = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in self?.store.suspend() }
+            }
+            powerObserverTokens.append(token)
+        }
+        for name in resumeNames {
+            let token = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in self?.store.resume() }
+            }
+            powerObserverTokens.append(token)
+        }
     }
 }

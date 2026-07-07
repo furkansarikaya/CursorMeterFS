@@ -8,11 +8,12 @@ enum MenuBarIconRenderer {
     /// Size of the status item button — standard macOS height is 18pt.
     static let iconSize = NSSize(width: 32, height: 18)
 
-    // MARK: - Single-entry cache
-    // Keyed on (style, colorMode, percentInt, used, total, status).
-    // fraction is rounded to integer percent so sub-percent floating-point
-    // noise never causes spurious cache misses.
-    private struct CacheKey: Equatable {
+    // MARK: - Small keyed cache
+    // Keyed on (style, colorMode, percentInt, used, total, status). fraction is rounded
+    // to integer percent so sub-percent floating-point noise never causes spurious misses.
+    // A small dictionary (not a single entry) so switching provider tabs — which
+    // alternates the inputs — doesn't thrash the cache.
+    private struct CacheKey: Hashable {
         let style: MenuBarIconStyle
         let colorMode: IconColorMode
         let percentInt: Int          // Int(fraction * 100)
@@ -20,8 +21,8 @@ enum MenuBarIconRenderer {
         let total: Int
         let status: UsageStatus
     }
-    private static var cachedKey: CacheKey?
-    private static var cachedImage: NSImage?
+    private static var cache: [CacheKey: NSImage] = [:]
+    private static let cacheLimit = 24
 
     // MARK: - Main entry point
 
@@ -41,8 +42,8 @@ enum MenuBarIconRenderer {
             total: total,
             status: status
         )
-        if key == cachedKey, let img = cachedImage {
-            return img
+        if let cached = cache[key] {
+            return cached
         }
 
         let isColor = colorMode == .color
@@ -62,8 +63,10 @@ enum MenuBarIconRenderer {
         case .gauge:        img = gaugeImage(fraction: fraction, color: color, isTemplate: !isColor)
         }
 
-        cachedKey   = key
-        cachedImage = img
+        if cache.count >= cacheLimit {
+            cache.removeAll(keepingCapacity: true)   // rare; cheap full reset beats LRU bookkeeping
+        }
+        cache[key] = img
         return img
     }
 

@@ -37,43 +37,42 @@ final class NotificationService: NSObject {
 
     // MARK: - Send notifications
 
+    /// Provider-agnostic threshold notification. `cycleKey` identifies the quota window
+    /// instance (provider + reset timestamp) so each threshold fires at most once per window.
     func notifyIfNeeded(
-        usage: UsageData,
+        providerName: String,
+        fraction: Double,
+        percentInt: Int,
+        resetDescription: String?,
+        cycleKey: String,
         warningThreshold: Double,
         criticalThreshold: Double,
-        notifyOnReset: Bool,
         enabled: Bool
     ) {
         guard enabled else { return }
 
-        let fraction = usage.fraction
-        let status = usage.status(
-            warningThreshold: warningThreshold,
-            criticalThreshold: criticalThreshold
-        )
-
-        let cycleKey = billingCycleKey(from: usage.billingCycleStart)
+        let resetSuffix = resetDescription.map { " Resets in \($0)." } ?? ""
 
         // Critical threshold
         let criticalKey = "critical-\(cycleKey)"
-        if status == .critical && !firedThresholds.contains(criticalKey) {
+        if fraction >= criticalThreshold && !firedThresholds.contains(criticalKey) {
             firedThresholds.insert(criticalKey)
             send(
                 identifier: criticalKey,
-                title: "Critical Usage",
-                body: "Critical: \(usage.percentageInt)% of monthly quota used. Resets \(usage.resetDateDescription).",
+                title: "\(providerName): Critical Usage",
+                body: "Critical: \(percentInt)% of your \(providerName) quota used.\(resetSuffix)",
                 categoryIdentifier: "CRITICAL"
             )
         }
 
         // Warning threshold
         let warningKey = "warning-\(cycleKey)"
-        if fraction >= warningThreshold && status != .critical && !firedThresholds.contains(warningKey) {
+        if fraction >= warningThreshold && fraction < criticalThreshold && !firedThresholds.contains(warningKey) {
             firedThresholds.insert(warningKey)
             send(
                 identifier: warningKey,
-                title: "Usage Warning",
-                body: "You've used \(usage.percentageInt)% of your monthly quota. Resets \(usage.resetDateDescription).",
+                title: "\(providerName): Usage Warning",
+                body: "You've used \(percentInt)% of your \(providerName) quota.\(resetSuffix)",
                 categoryIdentifier: "WARNING"
             )
         }
@@ -108,12 +107,6 @@ final class NotificationService: NSObject {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.5, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request) { _ in }
-    }
-
-    private func billingCycleKey(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM"
-        return formatter.string(from: date)
     }
 }
 
