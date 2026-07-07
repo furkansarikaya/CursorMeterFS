@@ -15,13 +15,13 @@ actor CodexProviderClient: ProviderClient {
 
         guard let fileToken = credentials.accessToken else {
             // API-key-only install: wham/usage needs OAuth — use the session-log fallback.
-            return try snapshotFromSessionLogs()
+            return try snapshotFromSessionLogs(email: credentials.email)
         }
 
         let token = refreshedAccessToken ?? fileToken
         do {
             let usage = try await apiClient.fetchUsage(accessToken: token, accountId: credentials.accountId)
-            return await snapshot(from: usage)
+            return await snapshot(from: usage, email: credentials.email)
 
         } catch CodexAPIClient.APIError.tokenInvalid {
             // One refresh attempt (in-memory), then retry; else fall back to session logs.
@@ -29,14 +29,14 @@ actor CodexProviderClient: ProviderClient {
                let newToken = try? await apiClient.refreshAccessToken(refreshToken: refreshToken) {
                 refreshedAccessToken = newToken
                 if let usage = try? await apiClient.fetchUsage(accessToken: newToken, accountId: credentials.accountId) {
-                    return await snapshot(from: usage)
+                    return await snapshot(from: usage, email: credentials.email)
                 }
             }
-            return try snapshotFromSessionLogs()
+            return try snapshotFromSessionLogs(email: credentials.email)
 
         } catch {
             // Network failure — the CLI's own logs still carry recent server-reported limits.
-            if let offline = try? snapshotFromSessionLogs() {
+            if let offline = try? snapshotFromSessionLogs(email: credentials.email) {
                 return offline
             }
             throw ProviderError.api(error.localizedDescription)
@@ -45,7 +45,7 @@ actor CodexProviderClient: ProviderClient {
 
     // MARK: - API mapping
 
-    private func snapshot(from usage: CodexAPIClient.UsageResponse) async -> ProviderSnapshot {
+    private func snapshot(from usage: CodexAPIClient.UsageResponse, email: String?) async -> ProviderSnapshot {
         var windows: [NamedRateWindow] = []
 
         if let primary = usage.rateLimit?.primaryWindow {
@@ -83,6 +83,7 @@ actor CodexProviderClient: ProviderClient {
         return ProviderSnapshot(
             windows: windows,
             planLabel: usage.planType.map(planDisplayName),
+            accountLabel: email,
             costUSD: cost,
             costLabel: "est. last \(CostScanner.lookbackDays) days"
         )
@@ -98,7 +99,7 @@ actor CodexProviderClient: ProviderClient {
 
     // MARK: - Offline fallback (session logs)
 
-    private func snapshotFromSessionLogs() throws -> ProviderSnapshot {
+    private func snapshotFromSessionLogs(email: String? = nil) throws -> ProviderSnapshot {
         guard let logged = CodexSessionLogReader.latestRateLimits() else {
             throw ProviderError.api("Codex usage unavailable — no API access and no recent session logs")
         }
@@ -135,6 +136,7 @@ actor CodexProviderClient: ProviderClient {
         return ProviderSnapshot(
             windows: windows,
             planLabel: logged.planType.map(planDisplayName),
+            accountLabel: email,
             updatedAt: logged.loggedAt ?? Date()
         )
     }

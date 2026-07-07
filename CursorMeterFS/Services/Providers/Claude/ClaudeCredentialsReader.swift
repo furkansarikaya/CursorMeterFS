@@ -62,6 +62,24 @@ enum ClaudeCredentialsReader {
         )
     }
 
+    // MARK: - Account info (~/.claude.json)
+
+    /// Reads the signed-in account e-mail from `~/.claude.json` (`oauthAccount.emailAddress`).
+    /// Local file only, no network; returns nil when unavailable.
+    /// The value is shown in the UI — never logged or exported.
+    static func accountEmail() -> String? {
+        let url = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".claude.json")
+        guard let data = try? Data(contentsOf: url),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let account = json["oauthAccount"] as? [String: Any],
+              let email = account["emailAddress"] as? String,
+              !email.isEmpty else {
+            return nil
+        }
+        return email
+    }
+
     // MARK: - Keychain fallback (login keychain, generic password)
 
     private static func readFromKeychain() -> Data? {

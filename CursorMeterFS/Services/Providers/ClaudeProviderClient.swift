@@ -62,6 +62,7 @@ final class ClaudeProviderClient: ProviderClient, Sendable {
         return ProviderSnapshot(
             windows: windows,
             planLabel: planDisplayName(credentials.subscriptionType ?? credentials.rateLimitTier),
+            accountLabel: ClaudeCredentialsReader.accountEmail(),
             costUSD: cost,
             costLabel: "est. last \(CostScanner.lookbackDays) days"
         )

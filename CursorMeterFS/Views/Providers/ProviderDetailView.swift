@@ -47,6 +47,13 @@ struct ProviderDetailView: View {
                         .cornerRadius(6)
                 }
             }
+            if let account = state.snapshot?.accountLabel, !account.isEmpty {
+                Text(account)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
             if let updatedAt = state.snapshot?.updatedAt {
                 Text("Updated \(updatedAt.shortRelativeDescription())")
                     .font(.caption)

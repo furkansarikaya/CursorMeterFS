@@ -10,6 +10,7 @@ enum CodexAuthReader {
         let accountId: String?
         let apiKey: String?        // plain OPENAI_API_KEY installs — DO NOT LOG
         let lastRefresh: Date?
+        let email: String?         // from id_token `email` claim; UI display only, never logged
     }
 
     static var codexHome: URL {
@@ -42,12 +43,16 @@ enum CodexAuthReader {
                 ?? ISO8601DateFormatter().date(from: refreshStr)
         }
 
+        // The id_token JWT carries the signed-in account's e-mail — local decode, no network.
+        let email = (tokens?["id_token"] as? String).flatMap(JWTDecoder.email(from:))
+
         let credentials = CodexCredentials(
             accessToken: tokens?["access_token"] as? String,
             refreshToken: tokens?["refresh_token"] as? String,
             accountId: tokens?["account_id"] as? String,
             apiKey: apiKey,
-            lastRefresh: lastRefresh
+            lastRefresh: lastRefresh,
+            email: email
         )
 
         guard credentials.accessToken != nil || credentials.apiKey != nil else {

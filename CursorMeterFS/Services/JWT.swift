@@ -34,6 +34,20 @@ enum JWTDecoder {
 
     /// Decodes the JWT payload (second segment) and extracts the `sub` claim.
     static func subject(from jwt: String) throws -> String {
+        let payload = try decodePayload(from: jwt)
+        guard let sub = payload.sub, !sub.isEmpty else { throw JWTError.missingSubClaim }
+        return sub
+    }
+
+    /// Decodes the JWT payload and returns the `email` claim, if present.
+    /// Used for display only — the value is never logged or exported.
+    static func email(from jwt: String) -> String? {
+        guard let payload = try? decodePayload(from: jwt),
+              let email = payload.email, !email.isEmpty else { return nil }
+        return email
+    }
+
+    private static func decodePayload(from jwt: String) throws -> Payload {
         let segments = jwt.split(separator: ".", omittingEmptySubsequences: false)
         guard segments.count >= 2 else { throw JWTError.invalidFormat }
 
@@ -48,15 +62,11 @@ enum JWTDecoder {
 
         guard let data = Data(base64Encoded: base64) else { throw JWTError.base64DecodingFailed }
 
-        let payload: Payload
         do {
-            payload = try JSONDecoder().decode(Payload.self, from: data)
+            return try JSONDecoder().decode(Payload.self, from: data)
         } catch {
             throw JWTError.jsonDecodingFailed(error)
         }
-
-        guard let sub = payload.sub, !sub.isEmpty else { throw JWTError.missingSubClaim }
-        return sub
     }
 
     /// Checks whether the JWT is expired (if `exp` claim is present).

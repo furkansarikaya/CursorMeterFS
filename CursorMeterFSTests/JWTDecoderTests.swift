@@ -48,6 +48,21 @@ final class JWTDecoderTests: XCTestCase {
         }
     }
 
+    // MARK: - email(from:)
+
+    func test_email_returnsEmailClaim() {
+        XCTAssertEqual(JWTDecoder.email(from: fakeJWT), "test@example.com")
+    }
+
+    func test_email_missingClaim_returnsNil() {
+        let payload = #"{"sub":"auth0|abc"}"#.base64URLEncoded()
+        XCTAssertNil(JWTDecoder.email(from: "h.\(payload).s"))
+    }
+
+    func test_email_invalidJWT_returnsNil() {
+        XCTAssertNil(JWTDecoder.email(from: "notavalidjwt"))
+    }
+
     // MARK: - isExpired
 
     func test_isExpired_futureExp_returnsFalse() {
