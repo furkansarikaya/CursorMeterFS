@@ -192,6 +192,18 @@ xcodebuild -scheme CursorMeterFS -destination "platform=macOS" build
 xcodebuild -scheme CursorMeterFS -destination "platform=macOS" test
 ```
 
+### ÖNEMLİ: Yeni dosya eklendiğinde `xcodegen generate` şart
+`project.yml`'de `sources: path: CursorMeterFS` klasör bazlı tanımlı — yani `.xcodeproj`
+dosya listesi otomatik senkronize OLMAZ. `Views/`, `Services/`, `Models/` vb. altına
+**yeni bir `.swift` dosyası eklendiğinde/silindiğinde** mutlaka:
+```bash
+xcodegen generate
+```
+çalıştırılmalı, yoksa Xcode o dosyayı target'a dahil etmez ve derleme
+`Cannot find 'X' in scope` hatası verir (dosya diskte var, kod doğru, ama proje
+dosyaya referans vermiyor demektir). Var olan bir dosyayı düzenlemek bu adımı
+gerektirmez — sadece dosya ekleme/silme/yeniden adlandırmada gerekir.
+
 ---
 
 ## Geliştirme Notları
