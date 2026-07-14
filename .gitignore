@@ -61,3 +61,4 @@ TestResults/
 
 # Local personal notes
 *.local.md
+.wrongstack/
