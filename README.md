@@ -255,8 +255,11 @@ On first launch macOS may show a few permission dialogs — **these are expected
 | **Notification permission** | Alerts are sent when usage thresholds are crossed | Notifications won't appear; the app continues working |
 
 > All permissions can be changed later under **System Settings → Privacy & Security**. If a
-> Keychain prompt reappears repeatedly, see [Keychain Prompt Reappears](#keychain-prompt-reappears-after-every-rebuild) below —
-> it's a code-signing quirk of local development builds, not a bug in the release DMG.
+> Keychain prompt reappears on every rebuild, see [Keychain Prompt Reappears After Every
+> Rebuild](#keychain-prompt-reappears-after-every-rebuild) below — a local dev signing quirk.
+> If it reappears a few times a day on an **installed, unchanged** copy, see [Keychain Prompt
+> Reappears Multiple Times a Day](#keychain-prompt-reappears-multiple-times-a-day-installed-dmg-no-rebuild) —
+> `scripts/sign-local.sh` fixes it in one run.
 
 ---
 
@@ -415,14 +418,44 @@ hash. Every time you change the code and rebuild, that hash changes, so macOS tr
 new build as a different app and the keychain access grant from the previous build no
 longer matches — it has to ask again.
 
-This **does not affect the release DMG** — once installed, that exact binary is never
-rebuilt on your Mac, so the grant persists normally. For a smoother local dev loop:
+For a smoother local dev loop:
 - Just click **Always Allow** each time; it's expected during active development.
 - Or sign your local build with your own **Personal Team** in Xcode's *Signing &
   Capabilities* (Option 2 above) instead of the project's default ad-hoc identity — a
   certificate-based signature stays stable across rebuilds, so the grant persists too.
   Note that running `xcodegen generate` regenerates the project from `project.yml`, which
   resets signing back to ad-hoc — you'll need to reselect your team afterward.
+
+### Keychain Prompt Reappears Multiple Times a Day (Installed DMG, No Rebuild)
+
+If you installed the release DMG and never rebuild it, but the Keychain prompt still
+reappears every so often (not on every launch — a few times a day), the cause is the
+release DMG's ad-hoc signature itself, not a rebuild. Ad-hoc signing
+(`codesign --sign -`, used because this project has no paid Apple Developer account —
+see [Is this safe?](#installation)) has no stable Team ID or certificate chain behind it.
+macOS's Keychain "Always Allow" grant is tied to that signing identity, and without a
+stable one, the grant can be silently dropped after a Keychain relock, sleep/wake cycle,
+or reboot — so it asks again, repeatedly, even though the app itself never changed.
+
+Fix: run the included script once per Mac to re-sign your installed copy with a **stable,
+self-signed local certificate** (created automatically in your login Keychain, no admin/
+Apple Developer account needed):
+
+```bash
+bash scripts/sign-local.sh                       # signs /Applications/CursorMeterFS.app
+# or, for a custom install location:
+bash scripts/sign-local.sh /path/to/CursorMeterFS.app
+```
+
+Quit and reopen CursorMeterFS, click **Always Allow** one more time on the next Claude
+refresh, and it will stick — the signing identity no longer changes, so the grant persists
+across relocks, reboots, and sleep/wake. Re-run the script whenever you install a new
+version (the certificate itself is reused, so the grant survives that too).
+
+Separately, `ClaudeCredentialsReader` also caches the Claude credential in memory for its
+remaining lifetime, so the Keychain is touched roughly once per token lifetime instead of
+on every refresh tick — this reduces how often the prompt *can* appear regardless of
+signing, and needs no action on your part.
 
 ---
 

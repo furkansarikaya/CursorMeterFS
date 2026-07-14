@@ -22,7 +22,54 @@ enum ClaudeCredentialsReader {
 
     private static let keychainService = "Claude Code-credentials"
 
+    // MARK: - In-memory cache
+    //
+    // The credential lives in the LOGIN Keychain, owned by the Claude Code CLI
+    // (not this app's own data-protection item) — so every SecItemCopyMatching
+    // call is a cross-app access that macOS may re-prompt for, especially when
+    // the app's code signature isn't a stable trusted identity. Caching for the
+    // token's remaining lifetime cuts Keychain reads from "every refresh tick"
+    // to "roughly once per token lifetime". Memory-only, never persisted.
+    private static let cacheLock = NSLock()
+    private static var cached: ClaudeCredentials?
+
+    /// Safety margin before expiry to force a re-read (clock skew + refresh latency).
+    private static let expiryMargin: TimeInterval = 60
+
     static func read() throws -> ClaudeCredentials {
+        cacheLock.lock()
+        if let cached, isFresh(cached) {
+            cacheLock.unlock()
+            return cached
+        }
+        cacheLock.unlock()
+
+        let credentials = try readUncached()
+
+        cacheLock.lock()
+        cached = credentials
+        cacheLock.unlock()
+
+        return credentials
+    }
+
+    /// Drops the cached credential, forcing the next `read()` to hit the file/
+    /// Keychain again. Call after the API reports the cached token as invalid
+    /// (e.g. the Claude CLI rotated it) so we don't keep retrying a stale value.
+    static func invalidate() {
+        cacheLock.lock()
+        cached = nil
+        cacheLock.unlock()
+    }
+
+    /// Internal (not private) so the pure caching decision is unit-testable
+    /// without touching the file/Keychain.
+    static func isFresh(_ credentials: ClaudeCredentials) -> Bool {
+        guard let expiresAt = credentials.expiresAt else { return true }
+        return expiresAt.timeIntervalSinceNow > expiryMargin
+    }
+
+    private static func readUncached() throws -> ClaudeCredentials {
         if let data = try? Data(contentsOf: credentialsFileURL),
            let credentials = parse(data) {
             return credentials

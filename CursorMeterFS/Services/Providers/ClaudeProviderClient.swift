@@ -16,8 +16,9 @@ final class ClaudeProviderClient: ProviderClient, Sendable {
         do {
             usage = try await apiClient.fetchUsage(accessToken: credentials.accessToken)
         } catch ClaudeAPIClient.APIError.tokenInvalid {
-            // The Claude CLI rotates this token itself; re-reading the credential source
-            // on the next tick usually finds a fresh one. Keep last data + error badge.
+            // The Claude CLI rotates this token itself; drop our cached copy so the
+            // next tick re-reads the file/Keychain instead of retrying the stale value.
+            ClaudeCredentialsReader.invalidate()
             throw ProviderError.api("Claude session expired — run `claude` once to refresh, will retry")
         } catch let error as ProviderError {
             throw error

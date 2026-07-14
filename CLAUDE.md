@@ -230,6 +230,18 @@ düşürür. Yeni tier eklenirse buraya case ekle.
 `UsageStore.refresh()` bunu yakalar → Keychain'i temizler → SQLite'tan taze okur.
 Cursor uygulaması da token'ı periyodik yenilediğinden genellikle taze bulunur.
 
+### Keychain günde birkaç kez şifre soruyorsa
+Kök neden: kurulu app'in **ad-hoc imzası** (paid Apple hesabı yok, bkz. `release.yml`)
+stabil bir Team ID/sertifikaya bağlı değil — macOS'un "Her zaman izin ver" güveni relock/
+uyku-uyanma/reboot sonrası bu yüzden düşer ve `ClaudeCredentialsReader`'ın login keychain'deki
+`Claude Code-credentials` (Claude Code CLI'ye ait, cross-app) okuması tekrar prompt açar.
+İki taraflı çözüm: `scripts/sign-local.sh` kurulu app'i login keychain'de oluşturduğu kalıcı
+self-signed sertifikayla yeniden imzalar (imza artık sabit kalır); ayrıca
+`ClaudeCredentialsReader` credential'ı bellekte `expiresAt`'e kadar cache'ler (`isFresh`),
+böylece Keychain her refresh yerine token ömrü başına ~1 kez okunur. `tokenInvalid` sonrası
+`invalidate()` cache'i temizler. Detay: `README.md` → "Keychain Prompt Reappears Multiple
+Times a Day".
+
 ---
 
 ## Test Stratejisi
