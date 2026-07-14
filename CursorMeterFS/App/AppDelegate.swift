@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupPowerObservers()
         Task { await NotificationService.shared.requestAuthorization() }
         store.start()
+        SelfSigningService.checkAndOfferFix()
     }
 
     deinit {

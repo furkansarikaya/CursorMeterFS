@@ -235,8 +235,13 @@ Kök neden: kurulu app'in **ad-hoc imzası** (paid Apple hesabı yok, bkz. `rele
 stabil bir Team ID/sertifikaya bağlı değil — macOS'un "Her zaman izin ver" güveni relock/
 uyku-uyanma/reboot sonrası bu yüzden düşer ve `ClaudeCredentialsReader`'ın login keychain'deki
 `Claude Code-credentials` (Claude Code CLI'ye ait, cross-app) okuması tekrar prompt açar.
-İki taraflı çözüm: `scripts/sign-local.sh` kurulu app'i login keychain'de oluşturduğu kalıcı
-self-signed sertifikayla yeniden imzalar (imza artık sabit kalır); ayrıca
+Üç taraflı çözüm: (1) `SelfSigningService` app her açılışta kendi imzasının ad-hoc olup
+olmadığını kontrol eder (`isRunningFromXcode()` ile DerivedData/dev build'leri hariç tutar)
+ve öyleyse kullanıcıya tek seferlik bir dialog gösterip onay alarak otomatik düzeltir —
+bundled `sign-local.sh` resource'unu (`CursorMeterFS/Resources/sign-local.sh`, `scripts/
+sign-local.sh`'a symlink) çalıştırıp app'i yeniden imzalar ve relaunch eder; (2)
+`scripts/sign-local.sh` aynı düzeltmeyi manuel/ikinci makine için sunar — login keychain'de
+kalıcı self-signed sertifika oluşturup kurulu app'i yeniden imzalar; (3) ayrıca
 `ClaudeCredentialsReader` credential'ı bellekte `expiresAt`'e kadar cache'ler (`isFresh`),
 böylece Keychain her refresh yerine token ömrü başına ~1 kez okunur. `tokenInvalid` sonrası
 `invalidate()` cache'i temizler. Detay: `README.md` → "Keychain Prompt Reappears Multiple

@@ -437,9 +437,15 @@ macOS's Keychain "Always Allow" grant is tied to that signing identity, and with
 stable one, the grant can be silently dropped after a Keychain relock, sleep/wake cycle,
 or reboot — so it asks again, repeatedly, even though the app itself never changed.
 
-Fix: run the included script once per Mac to re-sign your installed copy with a **stable,
-self-signed local certificate** (created automatically in your login Keychain, no admin/
-Apple Developer account needed):
+**Since v1.2.0 this is fixed automatically:** on launch, the app checks its own code
+signature, and if it's ad-hoc, shows a one-time dialog offering to fix it — no admin
+password, no manual steps. Choosing **Fix Now** creates the same stable, self-signed local
+certificate (in your login Keychain) and restarts the app once; choosing **Later** asks
+again next launch, and **Don't Ask Again** silences it for that build (it asks again after
+a future update, since every release is freshly ad-hoc signed by CI).
+
+You can also run the same fix manually at any time — useful right after installing, on a
+second Mac, or if you dismissed the dialog:
 
 ```bash
 bash scripts/sign-local.sh                       # signs /Applications/CursorMeterFS.app
@@ -447,10 +453,9 @@ bash scripts/sign-local.sh                       # signs /Applications/CursorMet
 bash scripts/sign-local.sh /path/to/CursorMeterFS.app
 ```
 
-Quit and reopen CursorMeterFS, click **Always Allow** one more time on the next Claude
-refresh, and it will stick — the signing identity no longer changes, so the grant persists
-across relocks, reboots, and sleep/wake. Re-run the script whenever you install a new
-version (the certificate itself is reused, so the grant survives that too).
+Either way, click **Always Allow** one more time on the next Claude refresh and it will
+stick — the signing identity no longer changes, so the grant persists across relocks,
+reboots, and sleep/wake.
 
 Separately, `ClaudeCredentialsReader` also caches the Claude credential in memory for its
 remaining lifetime, so the Keychain is touched roughly once per token lifetime instead of
